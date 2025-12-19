@@ -1,12 +1,21 @@
 site da tropa sport clube corinthias paulista
 
-o meu site vai ter um header cor de rosa escrito divas empreededoras com uma fonte bem boa
-com uma barra de pesquisa bonita o site vai ter letras amarelas,
-no body vai ter a tabela de itens na cor rosada ,no caso roupas 
-a tabela vai ter uma variedade boa de roupas usadas.
-os itens vai ter descrição de valor e tamanho
-O fotter vai ter o numero de celular e istagram da diva michele
-e os links para o site de outras divas 
+(Header)
+o meu site vai ter cor de rosa escrito divas empreededoras com uma fonte (times romam),
+com uma barra de pesquisa.
+
+(Body)
+vai ter a tabela de estoque que a usuaria pode editar colocando as roupas,
+na cor rosada de roupas , a tabela vai ter uma variedade roupas usadas.
+os itens vai ter descrição de valor,tamanho e quantidade. aqui vai ter tambem um historico e relatorio de vendas
+
+
+(footer)
+vai ter o numero de celular e istagram da diva michele.
+
+(geral)
+o site vai ter paletas de cores Rosa,amarelo e Branco,
+
 
 
 
