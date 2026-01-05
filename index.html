@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Divas Empreendedoras | Controle de Estoque</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: 'Arial', sans-serif;
+    }
+
+    :root {
+      --rosa-principal: #F4A3C4;
+      --rosa-forte: #E7357F;
+      --rosa-claro: #FDE4EC;
+      --branco: #ffffff;
+      --preto: #222;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      background: linear-gradient(135deg, var(--rosa-claro), var(--rosa-principal));
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .card {
+      background: var(--branco);
+      width: 100%;
+      max-width: 420px;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 10px 30px rgba(0,0,0,0.15);
+      text-align: center;
+    }
+
+    .logo {
+      font-size: 28px;
+      font-weight: bold;
+      color: var(--rosa-forte);
+      margin-bottom: 10px;
+    }
+
+    .subtitulo {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 25px;
+    }
+
+    label {
+      display: block;
+      margin-bottom: 8px;
+      font-weight: bold;
+      color: var(--preto);
+      text-align: left;
+    }
+
+    select {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: 1px solid #ccc;
+      margin-bottom: 20px;
+      font-size: 15px;
+    }
+
+    button {
+      width: 100%;
+      padding: 14px;
+      background: var(--rosa-forte);
+      color: var(--branco);
+      border: none;
+      border-radius: 10px;
+      font-size: 16px;
+      font-weight: bold;
+      cursor: pointer;
+      transition: 0.3s;
+    }
+
+    button:hover {
+      opacity: 0.9;
+    }
+
+    footer {
+      margin-top: 25px;
+      font-size: 12px;
+      color: #666;
+    }
+  </style>
+</head>
+<body>
+
+  <div class="card">
+    <div class="logo">Divas Empreendedoras</div>
+    <div class="subtitulo">
+      Sistema de Controle de Estoque
+    </div>
+
+    <form id="formDiva">
+      <label for="diva">Selecione a Diva</label>
+      <select id="diva" required>
+        <option value="">Escolha uma opção</option>
+        <option value="Diva 1">Diva 1</option>
+        <option value="Diva 2">Diva 2</option>
+        <option value="Diva 3">Diva 3</option>
+        <option value="Diva 4">Diva 4</option>
+        <option value="Diva 5">Diva 5</option>
+        <option value="Diva 6">Diva 6</option>
+      </select>
+
+      <button type="submit">Acessar Estoque</button>
+    </form>
+
+    <footer>
+      © 2026 • Projeto Divas Empreendedoras
+    </footer>
+  </div>
+
+  <script>
+    const form = document.getElementById('formDiva');
+
+    form.addEventListener('submit', (e) => {
+      e.preventDefault();
+
+      const diva = document.getElementById('diva').value;
+      if (!diva) return;
+
+      localStorage.setItem('divaAtual', diva);
+
+      // redireciona para a página de estoque
+      window.location.href = "estoque.html";
+    });
+  </script>
+
+</body>
+</html>
