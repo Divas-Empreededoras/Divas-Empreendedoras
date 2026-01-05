@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistema de Controle de Estoque</title>
+  <style>
+    * { box-sizing: border-box; font-family: Arial, Helvetica, sans-serif; }
+    body { background: #f4f6f8; margin: 0; padding: 20px; }
+    h1, h2 { text-align: center; }
+    .container { max-width: 1000px; margin: auto; background: #fff; padding: 20px; border-radius: 8px; box-shadow: 0 4px 10px rgba(0,0,0,0.1); }
+    form { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 10px; margin-bottom: 20px; }
+    input, button { padding: 10px; font-size: 14px; }
+    button { background: #2563eb; color: #fff; border: none; cursor: pointer; border-radius: 4px; }
+    button:hover { background: #1e40af; }
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { padding: 10px; border-bottom: 1px solid #ddd; text-align: center; }
+    th { background: #e5e7eb; }
+    .btn-remove { background: #dc2626; }
+    .btn-remove:hover { background: #991b1b; }
+    .total { margin-top: 15px; font-weight: bold; text-align: right; }
+    .relatorios { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 15px; }
+    footer { margin-top: 40px; font-size: 14px; text-align: center; color: #555; }
+  </style>
+</head>
+<body>
+
+<h1>📦 Sistema de Controle de Estoque</h1>
+
+<div class="container">
+  <h2>Cadastro de Produtos</h2>
+  <form id="estoqueForm">
+    <input type="text" id="nome" placeholder="Nome do produto" required />
+    <select id="categoria" required>
+      <option value="">Categoria</option>
+      <option value="Biojoia">Biojoia</option>
+      <option value="Roupa">Roupa</option>
+      <option value="Verdura">Verdura</option>
+      <option value="Moda Circular">Moda Circular</option>
+    </select>
+    <select id="tipo" required>
+      <option value="">Tipo do produto</option>
+      <option value="Artesanal">Artesanal</option>
+      <option value="Industrializado">Industrializado</option>
+      <option value="Orgânico">Orgânico</option>
+      <option value="Reutilizado">Reutilizado</option>
+    </select>
+    <input type="date" id="validade" />
+    <input type="number" id="quantidade" placeholder="Quantidade" required />
+    <input type="number" id="preco" placeholder="Preço (R$)" step="0.01" required />
+    <button type="submit">Adicionar</button>
+  </form>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Produto</th>
+        <th>Categoria</th>
+        <th>Tipo</th>
+        <th>Validade</th>
+        <th>Quantidade</th>
+        <th>Preço (R$)</th>
+        <th>Total (R$)</th>
+        <th>Ação</th>
+      </tr>
+    </thead>
+    <tbody id="tabelaEstoque"></tbody>
+  </table>
+
+  <div class="total" id="valorTotal"></div>
+
+  <div class="relatorios">
+    <button onclick="gerarCSV()">📄 Relatório CSV</button>
+    <button onclick="gerarPDF()">🧾 Relatório PDF</button>
+  </div>
+</div>
+
+<footer>
+  <p><strong>Relatório Acadêmico / Empresarial</strong></p>
+  <p>Este sistema permite o controle de estoque com geração de relatórios para análise administrativa e educacional.</p>
+</footer>
+
+<script>
+  const form = document.getElementById('estoqueForm');
+  const tabela = document.getElementById('tabelaEstoque');
+  const valorTotal = document.getElementById('valorTotal');
+
+  let estoque = JSON.parse(localStorage.getItem('estoque')) || [];
+
+  function salvar() {
+    localStorage.setItem('estoque', JSON.stringify(estoque));
+  }
+
+  function renderizar() {
+    tabela.innerHTML = '';
+    let totalGeral = 0;
+
+    estoque.forEach((item, index) => {
+      const totalItem = item.quantidade * item.preco;
+      totalGeral += totalItem;
+
+      const validadeTexto = item.validade ? item.validade : '—';
+
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${item.nome}</td>
+        <td>${item.categoria}</td>
+        <td>${item.tipo}</td>
+        <td>${validadeTexto}</td>
+        <td>${item.quantidade}</td>
+        <td>R$ ${item.preco.toFixed(2)}</td>
+        <td>R$ ${totalItem.toFixed(2)}</td>
+        <td><button class="btn-remove" onclick="remover(${index})">Excluir</button></td>
+      `;
+      tabela.appendChild(tr);
+    });
+
+    valorTotal.textContent = `Valor total do estoque: R$ ${totalGeral.toFixed(2)}`;
+  }
+
+  function remover(index) {
+    estoque.splice(index, 1);
+    salvar();
+    renderizar();
+  }
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+
+    const nome = document.getElementById('nome').value;
+    const categoria = document.getElementById('categoria').value;
+    const tipo = document.getElementById('tipo').value;
+    const validade = document.getElementById('validade').value;
+    const quantidade = Number(document.getElementById('quantidade').value);
+    const preco = Number(document.getElementById('preco').value);
+
+    estoque.push({ nome, categoria, tipo, validade, quantidade, preco });
+    salvar();
+    renderizar();
+    form.reset();
+  });
+    const nome = nomeInput.value = document.getElementById('nome').value;
+    const quantidade = Number(document.getElementById('quantidade').value);
+    const preco = Number(document.getElementById('preco').value);
+    estoque.push({ nome, quantidade, preco });
+    salvar();
+    renderizar();
+    form.reset();
+  });
+
+  function gerarCSV() {
+    if (estoque.length === 0) return alert('Estoque vazio');
+    let csv = 'Produto,Categoria,Tipo,Validade,Quantidade,Preço,Total\n';
+    estoque.forEach(item => {
+      const total = item.quantidade * item.preco;
+      csv += `${item.nome},${item.categoria},${item.tipo},${item.validade || '—'},${item.quantidade},${item.preco.toFixed(2)},${total.toFixed(2)}
+`;
+    });
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'relatorio_estoque.csv';
+    link.click();
+  }
+
+  function gerarPDF() {
+    let texto = 'RELATÓRIO DE ESTOQUE\n\n';
+    let totalGeral = 0;
+    estoque.forEach(item => {
+      const total = item.quantidade * item.preco;
+      totalGeral += total;
+      texto += `${item.nome} | Qtd: ${item.quantidade} | Preço: R$ ${item.preco.toFixed(2)} | Total: R$ ${total.toFixed(2)}\n`;
+    });
+    texto += `\nValor Total do Estoque: R$ ${totalGeral.toFixed(2)}`;
+    const blob = new Blob([texto], { type: 'application/pdf' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'relatorio_estoque.pdf';
+    link.click();
+  }
+
+  renderizar();
+</script>
+
+</body>
+</html>
