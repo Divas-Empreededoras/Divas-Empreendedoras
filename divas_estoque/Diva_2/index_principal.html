@@ -1,0 +1,330 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistema de Controle de Estoque</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <style>
+    :root {
+      --bg-body: #F2E8E8;
+      --bg-container: #ffffff;
+      --text-main: #333333;
+      --primary-color: #E7357F;
+      --border-color: #F2E8E8;
+      --row-hover: #fff5f8;
+    }
+
+    /* Variáveis do Modo Escuro */
+    body.dark-mode {
+      --bg-body: #1a1a1a;
+      --bg-container: #2d2d2d;
+      --text-main: #e0e0e0;
+      --border-color: #444444;
+      --row-hover: #3d2a33;
+    }
+
+    * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    
+    body { background: var(--bg-body); margin: 0; padding: 20px; color: var(--text-main); transition: 0.3s; }
+    
+    h1, h2 { text-align: center; color: var(--primary-color); }
+
+    .container { 
+      max-width: 1100px; 
+      margin: auto; 
+      background: var(--bg-container); 
+      padding: 25px; 
+      border-radius: 12px; 
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2); 
+      border-top: 5px solid var(--primary-color); 
+    }
+
+    form { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-bottom: 20px; }
+    
+    input, select { 
+      padding: 12px; 
+      font-size: 14px; 
+      border: 2px solid var(--border-color); 
+      border-radius: 6px; 
+      outline: none;
+      background: var(--bg-container);
+      color: var(--text-main);
+      transition: 0.3s;
+    }
+
+    input:focus, select:focus { border-color: var(--primary-color); }
+
+    button { 
+      background: var(--primary-color); 
+      color: #fff; 
+      border: none; 
+      cursor: pointer; 
+      font-weight: bold;
+      transition: 0.3s;
+      border-radius: 6px;
+      padding: 10px;
+    }
+
+    button:hover { opacity: 0.85; transform: translateY(-1px); }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; background: var(--bg-container); }
+    th { background: var(--primary-color); color: #ffffff; padding: 15px; text-transform: uppercase; font-size: 13px; }
+    td { padding: 12px; border-bottom: 1px solid var(--border-color); text-align: center; }
+    tbody tr:hover { background-color: var(--row-hover); }
+
+    .status-badge { padding: 5px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; color: white; }
+    .status-critico { background-color: #ff4d4d; }
+    .status-alerta { background-color: #ffa500; }
+    .status-normal { background-color: #2ecc71; }
+
+    .total { 
+      margin-top: 20px; 
+      font-weight: bold; 
+      text-align: right; 
+      font-size: 1.4rem; 
+      color: var(--primary-color);
+      padding: 10px;
+      border-bottom: 2px solid var(--primary-color);
+    }
+
+    .relatorios { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px; }
+    .relatorios button { flex: 1; }
+    .btn-pdf { background: transparent; color: var(--primary-color); border: 2px solid var(--primary-color); }
+
+    /* Botões Flutuantes Inferior Direito */
+    .floating-buttons {
+      position: fixed;
+      bottom: 30px;
+      right: 30px;
+      display: flex;
+      flex-direction: column;
+      gap: 15px;
+      z-index: 1000;
+    }
+
+    .btn-float {
+      width: 60px;
+      height: 60px;
+      border-radius: 50%;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+      font-size: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: none;
+      cursor: pointer;
+    }
+
+    .btn-dark { background: #333; color: #fff; }
+    .btn-help { background: var(--primary-color); color: #fff; }
+
+    /* Modal de Ajuda */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0; left: 0; width: 100%; height: 100%;
+      background: rgba(0,0,0,0.6);
+      z-index: 2000;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .modal-content {
+      background: var(--bg-container);
+      padding: 30px;
+      border-radius: 12px;
+      max-width: 500px;
+      width: 90%;
+      color: var(--text-main);
+      position: relative;
+    }
+
+    .modal-content h3 { color: var(--primary-color); margin-top: 0; }
+    .modal-content ul { padding-left: 20px; line-height: 1.6; }
+    .close-modal {
+      position: absolute;
+      top: 15px; right: 15px;
+      font-size: 24px; cursor: pointer; color: var(--primary-color);
+    }
+
+    footer { margin-top: 40px; text-align: center; color: #777; border-top: 1px solid var(--primary-color); padding-top: 15px; }
+  </style>
+</head>
+<body>
+
+<h1>📦 Sistema de Controle de Estoque</h1>
+
+<div class="container">
+  <h2>Cadastro de Produtos</h2>
+  <form id="estoqueForm">
+    <input type="text" id="nome" placeholder="Nome do produto" required />
+    <select id="categoria" required>
+      <option value="">Categoria</option>
+      <option value="Biojoia">Biojoia</option>
+      <option value="Roupa">Roupa</option>
+      <option value="Verdura">Verdura</option>
+      <option value="Moda Circular">Moda Circular</option>
+    </select>
+    <select id="tipo" required>
+      <option value="">Tipo</option>
+      <option value="Artesanal">Artesanal</option>
+      <option value="Industrializado">Industrializado</option>
+      <option value="Orgânico">Orgânico</option>
+      <option value="Reutilizado">Reutilizado</option>
+    </select>
+    <input type="number" id="quantidade" placeholder="Qtd" min="0" required />
+    <input type="number" id="preco" placeholder="Preço (R$)" step="0.01" min="0" required />
+    <button type="submit">Adicionar</button>
+  </form>
+
+  <div style="overflow-x: auto;">
+    <table>
+      <thead>
+        <tr>
+          <th>Produto</th>
+          <th>Categoria</th>
+          <th>Tipo</th>
+          <th>Qtd</th>
+          <th>Status</th>
+          <th>Preço (R$)</th>
+          <th>Total (R$)</th>
+          <th>Ação</th>
+        </tr>
+      </thead>
+      <tbody id="tabelaEstoque"></tbody>
+    </table>
+  </div>
+
+  <div class="total" id="valorTotal"></div>
+
+  <div class="relatorios">
+    <button onclick="gerarCSV()">📄 Exportar Excel (CSV)</button>
+    <button onclick="gerarPDF()" class="btn-pdf">🧾 Relatório PDF</button>
+  </div>
+</div>
+
+<div class="floating-buttons">
+  <button class="btn-float btn-dark" onclick="toggleDarkMode()" title="Alternar Modo Escuro">🌓</button>
+  <button class="btn-float btn-help" onclick="toggleHelp()" title="Ajuda/Dúvidas">❓</button>
+</div>
+
+<div id="helpModal" class="modal">
+  <div class="modal-content">
+    <span class="close-modal" onclick="toggleHelp()">&times;</span>
+    <h3>📖 Como utilizar o sistema?</h3>
+    <ul>
+      <li><strong>Cadastrar:</strong> Preencha todos os campos do formulário e clique em "Adicionar".</li>
+      <li><strong>Status:</strong> O sistema define automaticamente as cores: <br>
+        🔴 <em>Crítico</em> (até 5), 🟠 <em>Alerta</em> (até 15), 🟢 <em>Normal</em> (mais de 15).</li>
+      <li><strong>Excluir:</strong> Clique no botão "Excluir" na linha do produto para removê-lo.</li>
+      <li><strong>Exportar:</strong> Use os botões no final da página para salvar em Excel (CSV) ou PDF.</li>
+      <li><strong>Armazenamento:</strong> Seus dados ficam salvos automaticamente neste navegador.</li>
+    </ul>
+  </div>
+</div>
+
+<footer>
+  <p><strong>Relatório Administrativo</strong> | 2024</p>
+</footer>
+
+<script>
+  const form = document.getElementById('estoqueForm');
+  const tabela = document.getElementById('tabelaEstoque');
+  const valorTotal = document.getElementById('valorTotal');
+  const helpModal = document.getElementById('helpModal');
+
+  let estoque = JSON.parse(localStorage.getItem('estoque')) || [];
+
+  function salvar() { localStorage.setItem('estoque', JSON.stringify(estoque)); }
+
+  function obterStatus(qtd) {
+    if (qtd <= 5) return { texto: 'Crítico', classe: 'status-critico' };
+    if (qtd <= 15) return { texto: 'Alerta', classe: 'status-alerta' };
+    return { texto: 'Normal', classe: 'status-normal' };
+  }
+
+  function renderizar() {
+    tabela.innerHTML = '';
+    let totalGeral = 0;
+    estoque.forEach((item, index) => {
+      const totalItem = item.quantidade * item.preco;
+      totalGeral += totalItem;
+      const status = obterStatus(item.quantidade);
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td>${item.nome}</td>
+        <td>${item.categoria}</td>
+        <td>${item.tipo}</td>
+        <td>${item.quantidade}</td>
+        <td><span class="status-badge ${status.classe}">${status.texto}</span></td>
+        <td>R$ ${item.preco.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+        <td>R$ ${totalItem.toLocaleString('pt-BR', {minimumFractionDigits: 2})}</td>
+        <td><button style="background:#333;font-size:11px;" onclick="remover(${index})">Remover</button></td>
+      `;
+      tabela.appendChild(tr);
+    });
+    valorTotal.textContent = `Total: R$ ${totalGeral.toLocaleString('pt-BR', {minimumFractionDigits: 2})}`;
+  }
+
+  function remover(index) {
+    if(confirm("Excluir item?")) {
+      estoque.splice(index, 1);
+      salvar(); renderizar();
+    }
+  }
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const novoItem = {
+      nome: document.getElementById('nome').value,
+      categoria: document.getElementById('categoria').value,
+      tipo: document.getElementById('tipo').value,
+      quantidade: Number(document.getElementById('quantidade').value),
+      preco: Number(document.getElementById('preco').value)
+    };
+    estoque.push(novoItem);
+    salvar(); renderizar(); form.reset();
+  });
+
+  // Funções de Interface
+  function toggleDarkMode() {
+    document.body.classList.toggle('dark-mode');
+    const isDark = document.body.classList.contains('dark-mode');
+    localStorage.setItem('darkMode', isDark);
+  }
+
+  function toggleHelp() {
+    helpModal.style.display = (helpModal.style.display === 'flex') ? 'none' : 'flex';
+  }
+
+  // Persistir Modo Escuro
+  if(localStorage.getItem('darkMode') === 'true') document.body.classList.add('dark-mode');
+
+  // Exportações
+  function gerarCSV() {
+    let csv = '\uFEFFProduto;Categoria;Qtd;Preco;Total\n';
+    estoque.forEach(i => csv += `${i.nome};${i.categoria};${i.quantidade};${i.preco};${i.quantidade*i.preco}\n`);
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'estoque.csv'; link.click();
+  }
+
+  function gerarPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.text("Relatório de Estoque", 14, 20);
+    let y = 30;
+    estoque.forEach(i => {
+      doc.text(`${i.nome} - Qtd: ${i.quantidade} - Total: R$ ${(i.quantidade*i.preco).toFixed(2)}`, 14, y);
+      y += 10;
+    });
+    doc.save('estoque.pdf');
+  }
+
+  renderizar();
+</script>
+
+</body>
+</html>
