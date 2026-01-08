@@ -1,0 +1,758 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8" />
+<title>Divas Empreendedoras | Estoque</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<style>
+* { box-sizing:border-box; font-family: Arial, Helvetica, sans-serif; }
+
+:root{
+  --rosa:#E7357F;
+  --rosa-claro:#FDE4EC;
+  --amarelo:#EED316;
+  --branco:#fff;
+  --verde:#28a745;
+  --azul:#007bff;
+}
+
+body{margin:0;background:var(--rosa-claro);padding:20px}
+
+header{
+  background:var(--rosa);
+  color:white;
+  padding:20px;
+  border-radius:14px;
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:20px;
+}
+
+header button{
+  background:white;
+  color:var(--rosa);
+  border:none;
+  padding:8px 12px;
+  border-radius:8px;
+  font-weight:bold;
+  cursor:pointer;
+}
+
+.dashboard{
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:12px;
+  margin-bottom:20px;
+}
+
+.card{
+  background:white;
+  padding:15px;
+  border-radius:14px;
+  text-align:center;
+  box-shadow:0 6px 14px rgba(0,0,0,.12);
+}
+
+.card span{font-size:22px;font-weight:bold;color:var(--rosa)}
+.card.vendas span{color:var(--verde)}
+
+form{
+  background:white;
+  padding:20px;
+  border-radius:14px;
+  display:grid;
+  grid-template-columns:repeat(auto-fit,minmax(180px,1fr));
+  gap:15px;
+  margin-bottom:20px;
+}
+
+.form-group{
+  display:flex;
+  flex-direction:column;
+}
+
+.form-group label{
+  font-size:14px;
+  font-weight:bold;
+  margin-bottom:5px;
+  color:var(--rosa);
+}
+
+input,select,button{
+  padding:10px;
+  border-radius:8px;
+  border:1px solid #ccc;
+  font-size:14px;
+}
+
+form button{
+  grid-column:1/-1;
+  background:var(--rosa);
+  color:white;
+  border:none;
+  font-weight:bold;
+  margin-top:10px;
+  padding:12px;
+}
+
+.main-content{
+  display:flex;
+  gap:20px;
+  align-items:flex-start;
+}
+
+.table-container{
+  flex:1;
+}
+
+.painel-venda{
+  width:300px;
+  background:white;
+  padding:20px;
+  border-radius:14px;
+  box-shadow:0 6px 14px rgba(0,0,0,.12);
+  position:sticky;
+  top:20px;
+}
+
+.painel-venda h3{
+  color:var(--rosa);
+  margin-top:0;
+  text-align:center;
+  border-bottom:2px solid var(--rosa-claro);
+  padding-bottom:10px;
+}
+
+.produtos-selecionados{
+  max-height:300px;
+  overflow-y:auto;
+  margin:15px 0;
+  border:1px solid #eee;
+  border-radius:8px;
+  padding:10px;
+}
+
+.produto-selecionado{
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  padding:8px;
+  border-bottom:1px solid #f0f0f0;
+}
+
+.produto-selecionado:last-child{
+  border-bottom:none;
+}
+
+.produto-selecionado .info{
+  flex:1;
+}
+
+.produto-selecionado .quantidade{
+  display:flex;
+  align-items:center;
+  gap:8px;
+}
+
+.produto-selecionado input{
+  width:60px;
+  text-align:center;
+}
+
+.btn-remover-selecao{
+  background:none;
+  border:none;
+  color:red;
+  cursor:pointer;
+  font-size:18px;
+  padding:0 5px;
+}
+
+.btn-vender-lote{
+  width:100%;
+  background:var(--verde);
+  color:white;
+  border:none;
+  padding:12px;
+  border-radius:8px;
+  font-weight:bold;
+  cursor:pointer;
+  font-size:16px;
+}
+
+.resumo-venda{
+  background:var(--rosa-claro);
+  padding:15px;
+  border-radius:8px;
+  margin:15px 0;
+  text-align:center;
+}
+
+.resumo-venda div{
+  margin:5px 0;
+  font-size:14px;
+}
+
+.resumo-venda .total{
+  font-size:18px;
+  font-weight:bold;
+  color:var(--verde);
+  margin-top:10px;
+}
+
+table{
+  width:100%;
+  background:white;
+  border-collapse:collapse;
+  border-radius:14px;
+  overflow:hidden;
+}
+
+th,td{padding:10px;text-align:center;border-bottom:1px solid #eee}
+th{background:var(--amarelo)}
+
+.disponivel{color:var(--verde);font-weight:bold}
+.indisponivel{color:red;font-weight:bold}
+
+.selecionar-checkbox{
+  width:20px;
+  height:20px;
+  cursor:pointer;
+}
+
+.btn-editar{
+  background:var(--amarelo);
+  color:black;
+  border:none;
+  padding:5px 10px;
+  border-radius:6px;
+  cursor:pointer;
+  font-size:12px;
+  margin:2px;
+}
+
+.btn-remover{
+  background:red;
+  color:white;
+  border:none;
+  padding:5px 10px;
+  border-radius:6px;
+  cursor:pointer;
+  font-size:12px;
+  margin:2px;
+}
+
+/* ===== GRÁFICOS ===== */
+.graficos{
+  display:flex;
+  gap:20px;
+  justify-content:center;
+  margin-top:20px;
+  flex-wrap:wrap;
+}
+
+.graficoBox{
+  background:white;
+  padding:10px;
+  border-radius:14px;
+  width:300px;
+  height:250px;
+}
+
+canvas{
+  width:100%!important;
+  height:100%!important;
+}
+
+footer{
+  margin-top:30px;
+  text-align:center;
+  font-size:13px;
+}
+
+.currency-input{
+  position:relative;
+}
+
+.currency-input::before{
+  content:"R$";
+  position:absolute;
+  left:10px;
+  top:50%;
+  transform:translateY(-50%);
+  font-weight:bold;
+  color:#666;
+}
+
+.currency-input input{
+  padding-left:40px;
+}
+
+.estoque-zero{
+  background-color:#fff5f5;
+}
+</style>
+</head>
+
+<body>
+
+<header>
+<h1 id="titulo"></h1>
+<button onclick="trocarDiva()">Trocar Diva</button>
+</header>
+
+<section class="dashboard">
+<div class="card">Produtos<br><span id="totalProdutos">0</span></div>
+<div class="card">Quantidade<br><span id="qtdTotal">0</span></div>
+<div class="card vendas">Vendas<br><span id="valorVendas">R$ 0,00</span></div>
+</section>
+
+<form id="form">
+<div class="form-group">
+  <label for="nome">Produto</label>
+  <input id="nome" placeholder="Nome do produto" required />
+</div>
+
+<div class="form-group">
+  <label for="categoria">Categoria</label>
+  <select id="categoria" required>
+    <option value="Sem categoria">Sem categoria</option>
+    <option>Biojoia</option>
+    <option>Roupa</option>
+    <option>Verdura</option>
+    <option>Moda Circular</option>
+  </select>
+</div>
+
+<div class="form-group">
+  <label for="quantidade">Quantidade</label>
+  <input type="number" id="quantidade" placeholder="0" min="0" required />
+</div>
+
+<div class="form-group">
+  <label for="preco">Preço Unitário (R$)</label>
+  <div class="currency-input">
+    <input type="text" id="preco" placeholder="0,00" required />
+  </div>
+</div>
+
+<button>Adicionar / Salvar</button>
+</form>
+
+<div class="main-content">
+  <div class="table-container">
+    <table>
+      <thead>
+        <tr>
+          <th>Selecionar</th>
+          <th>Produto</th>
+          <th>Categoria</th>
+          <th>Qtd</th>
+          <th>Preço</th>
+          <th>Status</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody id="tabela"></tbody>
+    </table>
+  </div>
+
+  <div class="painel-venda">
+    <h3>🛒 Venda Múltipla</h3>
+    <div class="produtos-selecionados" id="produtosSelecionados">
+      <p style="text-align:center;color:#999;font-style:italic;">
+        Selecione produtos para vender
+      </p>
+    </div>
+    
+    <div class="resumo-venda">
+      <div>Produtos selecionados: <span id="contadorSelecionados">0</span></div>
+      <div>Quantidade total: <span id="quantidadeSelecionada">0</span></div>
+      <div class="total">Total: <span id="totalVenda">R$ 0,00</span></div>
+    </div>
+    
+    <button class="btn-vender-lote" onclick="realizarVenda()" disabled>
+      REALIZAR VENDA
+    </button>
+  </div>
+</div>
+
+<div class="graficos">
+<div class="graficoBox"><canvas id="graficoPizza"></canvas></div>
+<div class="graficoBox"><canvas id="graficoBarras"></canvas></div>
+</div>
+
+<footer>Projeto Acadêmico • Divas Empreendedoras</footer>
+
+<script>
+/* ===== LOGIN COM SENHA POR DIVA ===== */
+let diva = localStorage.getItem('divaAtual') || 'Diva 1';
+let senhaSalva = localStorage.getItem(`senha_${diva}`);
+
+if(!senhaSalva){
+  const nova = prompt(`Crie uma senha para ${diva}:`);
+  if(!nova){ alert('Senha obrigatória'); location.reload(); }
+  localStorage.setItem(`senha_${diva}`, nova);
+}else{
+  const tentativa = prompt(`Digite a senha da ${diva}:`);
+  if(tentativa !== senhaSalva){
+    alert('Senha incorreta!');
+    location.reload();
+  }
+}
+
+titulo.innerText = `Estoque - ${diva}`;
+
+/* ===== DADOS ===== */
+let estoque = JSON.parse(localStorage.getItem(`estoque_${diva}`)) || [];
+let vendasTotal = JSON.parse(localStorage.getItem(`vendas_${diva}`)) || 0;
+let editarIndex = null;
+let produtosSelecionados = new Map(); // Map para armazenar produtos selecionados
+
+function salvar(){
+  localStorage.setItem(`estoque_${diva}`, JSON.stringify(estoque));
+  localStorage.setItem(`vendas_${diva}`, JSON.stringify(vendasTotal));
+}
+
+/* ===== FORMATAÇÃO DE MOEDA ===== */
+const precoInput = document.getElementById('preco');
+
+// Formatar moeda ao digitar
+precoInput.addEventListener('input', function(e) {
+  let value = e.target.value.replace(/\D/g, '');
+  value = value.replace(/^0+/, '');
+  
+  if (value.length === 0) {
+    e.target.value = '';
+    return;
+  }
+  
+  while (value.length < 3) {
+    value = '0' + value;
+  }
+  
+  const reais = value.slice(0, -2);
+  const centavos = value.slice(-2);
+  let formatted = '';
+  
+  if (reais.length > 0) {
+    formatted = reais.replace(/\B(?=(\d{3})+(?!\d))/g, '.') + ',' + centavos;
+  } else {
+    formatted = '0,' + centavos;
+  }
+  
+  e.target.value = formatted;
+});
+
+precoInput.addEventListener('blur', function(e) {
+  let value = e.target.value.replace(/\D/g, '');
+  if (value === '') {
+    e.target.value = '';
+    return;
+  }
+  
+  while (value.length < 3) {
+    value = '0' + value;
+  }
+  
+  const reais = value.slice(0, -2);
+  const centavos = value.slice(-2);
+  const formatted = (reais.length > 0 ? reais.replace(/\B(?=(\d{3})+(?!\d))/g, '.') : '0') + ',' + centavos;
+  e.target.value = formatted;
+});
+
+function parseCurrency(value) {
+  const cleanValue = value.replace(/\./g, '').replace(',', '.');
+  return parseFloat(cleanValue) || 0;
+}
+
+/* ===== RENDERIZAÇÃO ===== */
+function renderizar(){
+  tabela.innerHTML='';
+  let qtd=0, disponivel=0, indisponivel=0;
+
+  estoque.forEach((p,i)=>{
+    qtd+=p.quantidade;
+    
+    const statusProduto = p.quantidade > 0 ? 'Disponível' : 'Indisponível';
+    statusProduto==='Disponível'?disponivel++:indisponivel++;
+
+    // Verificar se produto está selecionado
+    const qtdSelecionada = produtosSelecionados.get(i) || 0;
+    const maxQtd = Math.min(p.quantidade, 99); // Limite máximo para seleção
+
+    tabela.innerHTML+=`
+    <tr class="${p.quantidade === 0 ? 'estoque-zero' : ''}">
+      <td>
+        <input type="checkbox" class="selecionar-checkbox" 
+               ${p.quantidade === 0 ? 'disabled' : ''}
+               onchange="selecionarProduto(${i}, this.checked, ${p.quantidade})"
+               ${qtdSelecionada > 0 ? 'checked' : ''}>
+      </td>
+      <td>${p.nome}</td>
+      <td>${p.categoria || 'Sem categoria'}</td>
+      <td>${p.quantidade}</td>
+      <td>R$ ${p.preco.toFixed(2).replace('.', ',')}</td>
+      <td class="${statusProduto==='Disponível'?'disponivel':'indisponivel'}">${statusProduto}</td>
+      <td>
+        <button class="btn-editar" onclick="editar(${i})">Editar</button>
+        <button class="btn-remover" onclick="remover(${i})">Remover</button>
+      </td>
+    </tr>`;
+  });
+
+  totalProdutos.innerText = estoque.length;
+  qtdTotal.innerText = qtd;
+  valorVendas.innerText = `R$ ${vendasTotal.toFixed(2).replace('.', ',')}`;
+
+  atualizarPainelVenda();
+  gerarGraficos(disponivel, indisponivel);
+}
+
+/* ===== SELEÇÃO DE PRODUTOS ===== */
+function selecionarProduto(index, checked, quantidadeMaxima) {
+  if (checked && quantidadeMaxima > 0) {
+    // Selecionar com quantidade padrão 1
+    produtosSelecionados.set(index, 1);
+  } else {
+    produtosSelecionados.delete(index);
+  }
+  
+  renderizar();
+  atualizarPainelVenda();
+}
+
+function atualizarQuantidadeSelecionada(index, quantidade) {
+  const produto = estoque[index];
+  const maxQtd = produto.quantidade;
+  
+  if (quantidade <= 0) {
+    produtosSelecionados.delete(index);
+  } else if (quantidade > maxQtd) {
+    produtosSelecionados.set(index, maxQtd);
+  } else {
+    produtosSelecionados.set(index, quantidade);
+  }
+  
+  atualizarPainelVenda();
+}
+
+function atualizarPainelVenda() {
+  const container = document.getElementById('produtosSelecionados');
+  const btnVender = document.querySelector('.btn-vender-lote');
+  
+  if (produtosSelecionados.size === 0) {
+    container.innerHTML = '<p style="text-align:center;color:#999;font-style:italic;">Selecione produtos para vender</p>';
+    btnVender.disabled = true;
+    btnVender.style.opacity = '0.6';
+    
+    document.getElementById('contadorSelecionados').textContent = '0';
+    document.getElementById('quantidadeSelecionada').textContent = '0';
+    document.getElementById('totalVenda').textContent = 'R$ 0,00';
+    return;
+  }
+  
+  let html = '';
+  let totalQuantidade = 0;
+  let totalValor = 0;
+  let contador = 0;
+  
+  produtosSelecionados.forEach((quantidade, index) => {
+    const produto = estoque[index];
+    if (produto && produto.quantidade > 0) {
+      contador++;
+      totalQuantidade += quantidade;
+      totalValor += quantidade * produto.preco;
+      
+      html += `
+      <div class="produto-selecionado">
+        <div class="info">
+          <strong>${produto.nome}</strong><br>
+          <small>R$ ${produto.preco.toFixed(2).replace('.', ',')} cada</small>
+        </div>
+        <div class="quantidade">
+          <input type="number" 
+                 min="1" 
+                 max="${produto.quantidade}"
+                 value="${quantidade}"
+                 onchange="atualizarQuantidadeSelecionada(${index}, parseInt(this.value))"
+                 style="width:60px;">
+          <button class="btn-remover-selecao" onclick="removerSelecao(${index})">×</button>
+        </div>
+      </div>`;
+    }
+  });
+  
+  container.innerHTML = html;
+  
+  document.getElementById('contadorSelecionados').textContent = contador;
+  document.getElementById('quantidadeSelecionada').textContent = totalQuantidade;
+  document.getElementById('totalVenda').textContent = `R$ ${totalValor.toFixed(2).replace('.', ',')}`;
+  
+  btnVender.disabled = false;
+  btnVender.style.opacity = '1';
+}
+
+function removerSelecao(index) {
+  produtosSelecionados.delete(index);
+  renderizar();
+  atualizarPainelVenda();
+}
+
+function realizarVenda() {
+  if (produtosSelecionados.size === 0) {
+    alert('Nenhum produto selecionado!');
+    return;
+  }
+  
+  let resumo = 'RESUMO DA VENDA:\n\n';
+  let valorTotalVenda = 0;
+  let produtosVendidos = [];
+  
+  // Primeiro, verificar se todos os produtos ainda têm estoque suficiente
+  for (let [index, quantidade] of produtosSelecionados) {
+    const produto = estoque[index];
+    if (produto.quantidade < quantidade) {
+      alert(`Erro: ${produto.nome} tem apenas ${produto.quantidade} unidades disponíveis (solicitado: ${quantidade})`);
+      return;
+    }
+  }
+  
+  // Confirmar venda
+  if (!confirm('Confirmar venda dos produtos selecionados?')) {
+    return;
+  }
+  
+  // Processar vendas
+  produtosSelecionados.forEach((quantidade, index) => {
+    const produto = estoque[index];
+    
+    // Diminuir quantidade
+    produto.quantidade -= quantidade;
+    
+    // Calcular valor da venda
+    const valorVenda = quantidade * produto.preco;
+    valorTotalVenda += valorVenda;
+    
+    // Adicionar ao resumo
+    resumo += `• ${produto.nome}: ${quantidade} × R$ ${produto.preco.toFixed(2).replace('.', ',')} = R$ ${valorVenda.toFixed(2).replace('.', ',')}\n`;
+    
+    // Salvar produto vendido para mensagem final
+    produtosVendidos.push({
+      nome: produto.nome,
+      quantidade: quantidade,
+      valor: valorVenda
+    });
+  });
+  
+  // Atualizar total de vendas
+  vendasTotal += valorTotalVenda;
+  
+  // Limpar seleções
+  produtosSelecionados.clear();
+  
+  // Salvar e renderizar
+  salvar();
+  renderizar();
+  
+  // Mostrar resumo
+  resumo += `\n💰 VALOR TOTAL: R$ ${valorTotalVenda.toFixed(2).replace('.', ',')}`;
+  alert(resumo);
+}
+
+function editar(i){
+  const p=estoque[i];
+  nome.value=p.nome;
+  categoria.value=p.categoria;
+  quantidade.value=p.quantidade;
+  
+  precoInput.value = p.preco.toFixed(2).replace('.', ',');
+  editarIndex=i;
+  
+  document.getElementById('form').scrollIntoView({ behavior: 'smooth' });
+}
+
+function remover(i){
+  if(confirm('Remover produto do estoque?')){
+    // Remover também da seleção se estiver selecionado
+    produtosSelecionados.delete(i);
+    estoque.splice(i,1);
+    salvar(); 
+    renderizar();
+  }
+}
+
+form.onsubmit=e=>{
+  e.preventDefault();
+
+  const prod={
+    nome:nome.value,
+    categoria:categoria.value || 'Sem categoria',
+    quantidade:Number(quantidade.value),
+    preco:parseCurrency(precoInput.value)
+  };
+
+  if(editarIndex!==null){
+    estoque[editarIndex]=prod;
+    editarIndex=null;
+  }else{
+    estoque.push(prod);
+  }
+
+  salvar(); renderizar(); 
+  
+  nome.value = '';
+  categoria.value = 'Sem categoria';
+  quantidade.value = '';
+  precoInput.value = '';
+};
+
+/* ===== GRÁFICOS ===== */
+let pizza,barras;
+
+function gerarGraficos(disponivel, indisponivel){
+  pizza?.destroy(); barras?.destroy();
+
+  pizza=new Chart(graficoPizza,{
+    type:'pie',
+    data:{
+      labels:['Disponível','Indisponível'],
+      datasets:[{
+        data:[disponivel, indisponivel],
+        backgroundColor:['#28a745','#dc3545']
+      }]
+    },
+    options:{responsive:true,maintainAspectRatio:false}
+  });
+
+  const categorias={};
+  estoque.forEach(p=>{
+    const cat = p.categoria || 'Sem categoria';
+    categorias[cat]=(categorias[cat]||0)+p.quantidade;
+  });
+
+  barras=new Chart(graficoBarras,{
+    type:'bar',
+    data:{labels:Object.keys(categorias),datasets:[{data:Object.values(categorias)}]},
+    options:{responsive:true,maintainAspectRatio:false}
+  });
+}
+
+function trocarDiva(){
+  localStorage.removeItem('divaAtual');
+  location.href='index.html';
+}
+
+// Inicializar valor de vendas se não existir
+if(vendasTotal === undefined || vendasTotal === null){
+  vendasTotal = 0;
+  localStorage.setItem(`vendas_${diva}`, JSON.stringify(vendasTotal));
+}
+
+renderizar();
+</script>
+</body>
+</html>
