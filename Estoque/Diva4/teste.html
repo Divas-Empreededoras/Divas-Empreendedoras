@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistema de Controle de Estoque Pro</title>
+  <style>
+    :root {
+      --primary: #E7357F;    /* Vinho/Rosa */
+      --secondary: #EED316;  /* Amarelo */
+      --bg-light: #F2E8E8;   /* Gelo */
+      --text-dark: #333;
+      --success: #22c55e;
+      --danger: #E7357F;
+      --warning: #f59e0b;
+    }
+
+    * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    
+    body { background: var(--bg-light); margin: 0; padding: 20px; color: var(--text-dark); }
+    h1, h2 { text-align: center; color: var(--primary); }
+
+    .container { 
+      max-width: 1100px; 
+      margin: auto; 
+      background: #fff; 
+      padding: 30px; 
+      border-radius: 12px; 
+      box-shadow: 0 8px 20px rgba(0,0,0,0.08); 
+    }
+
+    .categoria-manager {
+      background: #fdf6d0;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+      border: 1px solid #e5d8a8;
+    }
+
+    form, .perda-manager { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
+      gap: 15px; 
+      margin-bottom: 30px;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+    }
+
+    .perda-manager { background-color: #fff5f5; border-color: #feb2b2; }
+
+    input, select, button { 
+      padding: 12px; 
+      font-size: 14px; 
+      border: 1px solid #ccc; 
+      border-radius: 6px;
+      outline: none;
+    }
+
+    button { 
+      background: var(--primary); 
+      color: #fff; 
+      border: none; 
+      cursor: pointer; 
+      font-weight: bold;
+      transition: 0.3s;
+    }
+
+    button:hover { opacity: 0.9; transform: translateY(-1px); }
+
+    .btn-vender { background: var(--success); color: white; margin-right: 5px; }
+    .btn-edit { background: #3b82f6; color: white; margin-right: 5px; }
+    .btn-remove { background: var(--danger); color: white; }
+    .btn-zerar { background: var(--danger); padding: 8px 15px; font-size: 12px; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { padding: 12px; border-bottom: 1px solid #eee; text-align: center; }
+    th { background: var(--secondary); color: var(--text-dark); }
+
+    .img-produto { width: 50px; height: 50px; object-fit: cover; border-radius: 6px; }
+    .total { margin-top: 20px; font-size: 1.2rem; font-weight: bold; text-align: right; color: var(--success); }
+    .total-perda { color: var(--danger); }
+    
+    .relatorios { display: flex; gap: 15px; margin-top: 20px; }
+    .relatorios button { background: var(--text-dark); }
+
+    #secaoVendas, #secaoPerdas { margin-top: 40px; border-top: 2px solid #eee; padding-top: 20px; }
+    .header-vendas, .header-perdas { display: flex; justify-content: space-between; align-items: center; }
+  </style>
+</head>
+<body>
+
+<h1>📦 Sistema de Controle de Estoque</h1>
+
+<div class="container">
+  
+  <div class="categoria-manager">
+    <strong>Categorias:</strong>
+    <input type="text" id="novaCategoriaNome" placeholder="Novo nome...">
+    <button onclick="adicionarCategoria()">Adicionar</button>
+    
+    <div style="margin-left: auto; display: flex; gap: 5px;">
+        <select id="listaCategoriasGerenciar">
+            <option value="">Selecionar Categoria...</option>
+        </select>
+        <button onclick="editarCategoria()" class="btn-edit">Editar</button>
+        <button onclick="removerCategoria()" class="btn-remove">Excluir</button>
+    </div>
+  </div>
+
+  <h2>Cadastro / Edição de Produto</h2>
+  <form id="estoqueForm">
+    <input type="hidden" id="editIndex" value="-1">
+    <input type="text" id="nome" placeholder="Nome do produto" required />
+    <input type="file" id="fotoArquivo" accept="image/*" />
+    <select id="categoriaSelect" required>
+        <option value="">Selecione a Categoria</option>
+    </select>
+    <select id="tipo" required>
+      <option value="">Tipo do produto</option>
+      <option value="Artesanal">Artesanal</option>
+      <option value="Industrializado">Industrializado</option>
+      <option value="Orgânico">Orgânico</option>
+      <option value="Reutilizado">Reutilizado</option>
+    </select>
+    <input type="date" id="validade" />
+    <input type="number" id="quantidade" placeholder="Qtd" required min="1" />
+    <input type="number" id="preco" placeholder="Preço (R$)" step="0.01" required min="0" />
+    <button type="submit" id="btnSalvar">Salvar Produto</button>
+  </form>
+
+  <div style="overflow-x: auto;">
+    <table>
+      <thead>
+        <tr>
+          <th>Foto</th>
+          <th>Produto</th>
+          <th>Categoria</th>
+          <th>Tipo</th>
+          <th>Validade</th>
+          <th>Qtd</th>
+          <th>Preço</th>
+          <th>Total</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody id="tabelaEstoque"></tbody>
+    </table>
+  </div>
+
+  <div class="total" id="valorTotalVendas">Total em Vendas: R$ 0,00</div>
+
+  <h2 style="color: var(--danger); margin-top: 50px;">📉 Registrar Perda de Produto</h2>
+  <div class="perda-manager">
+      <select id="perdaProdutoSelect">
+          <option value="">Selecione o Produto</option>
+      </select>
+      <select id="perdaMotivo">
+          <option value="">Motivo da Perda</option>
+          <option value="Validade Vencida">Validade Vencida</option>
+          <option value="Dano/Quebra">Dano/Quebra</option>
+          <option value="Furto/Extravio">Furto/Extravio</option>
+          <option value="Erro de Produção">Erro de Produção</option>
+      </select>
+      <input type="number" id="perdaQuantidade" placeholder="Qtd Perdida" min="1">
+      <button onclick="registrarPerda()" style="background: var(--danger);">Registrar Perda</button>
+  </div>
+
+  <div class="relatorios">
+    <button onclick="gerarCSV()">📄 Exportar CSV</button>
+    <button onclick="gerarTXT()">🧾 Exportar Relatório</button>
+  </div>
+
+  <div id="secaoVendas"></div>
+  <div id="secaoPerdas"></div>
+</div>
+
+<script>
+  let estoque = JSON.parse(localStorage.getItem('estoque')) || [];
+  let categorias = JSON.parse(localStorage.getItem('categorias')) || ["Crocke", "Cosméticos", "Biojoia", "Roupa"];
+  let vendas = JSON.parse(localStorage.getItem('vendas')) || [];
+  let perdas = JSON.parse(localStorage.getItem('perdas')) || [];
+
+  const form = document.getElementById('estoqueForm');
+  const tabela = document.getElementById('tabelaEstoque');
+  const catSelect = document.getElementById('categoriaSelect');
+  const catGerenciar = document.getElementById('listaCategoriasGerenciar');
+  const perdaProdSelect = document.getElementById('perdaProdutoSelect');
+
+  function salvarTudo() {
+    localStorage.setItem('estoque', JSON.stringify(estoque));
+    localStorage.setItem('categorias', JSON.stringify(categorias));
+    localStorage.setItem('vendas', JSON.stringify(vendas));
+    localStorage.setItem('perdas', JSON.stringify(perdas));
+  }
+
+  function renderizarCategorias() {
+    catSelect.innerHTML = '<option value="">Selecione a Categoria</option>';
+    catGerenciar.innerHTML = '<option value="">Selecionar Categoria...</option>';
+    
+    categorias.sort().forEach(cat => {
+      catSelect.innerHTML += `<option value="${cat}">${cat}</option>`;
+      catGerenciar.innerHTML += `<option value="${cat}">${cat}</option>`;
+    });
+  }
+
+  function adicionarCategoria() {
+    const nome = document.getElementById('novaCategoriaNome').value.trim();
+    if (nome && !categorias.includes(nome)) {
+      categorias.push(nome);
+      document.getElementById('novaCategoriaNome').value = '';
+      salvarTudo();
+      renderizarCategorias();
+    }
+  }
+
+  function removerCategoria() {
+    const selecionada = catGerenciar.value;
+    if (!selecionada) return alert("Selecione uma categoria para excluir.");
+    
+    if (confirm(`Excluir a categoria "${selecionada}"?`)) {
+      categorias = categorias.filter(c => c !== selecionada);
+      estoque.forEach(item => {
+        if(item.categoria === selecionada) item.categoria = "Sem Categoria";
+      });
+      salvarTudo();
+      renderizarCategorias();
+      renderizarEstoque();
+    }
+  }
+
+  function editarCategoria() {
+    const selecionada = catGerenciar.value;
+    if (!selecionada) return alert("Selecione uma categoria para editar.");
+
+    const novoNome = prompt("Novo nome para a categoria:", selecionada);
+    if (novoNome && novoNome.trim() !== "" && novoNome !== selecionada) {
+      categorias = categorias.map(c => c === selecionada ? novoNome : c);
+      estoque.forEach(item => {
+        if(item.categoria === selecionada) item.categoria = novoNome;
+      });
+      salvarTudo();
+      renderizarCategorias();
+      renderizarEstoque();
+    }
+  }
+
+  function renderizarEstoque() {
+    tabela.innerHTML = '';
+    perdaProdSelect.innerHTML = '<option value="">Selecione o Produto</option>';
+
+    estoque.forEach((item, index) => {
+      const totalItem = item.quantidade * item.preco;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><img src="${item.foto || ''}" class="img-produto" onerror="this.style.display='none'"></td>
+        <td>${item.nome}</td>
+        <td>${item.categoria}</td>
+        <td>${item.tipo}</td>
+        <td>${item.validade || '—'}</td>
+        <td>${item.quantidade}</td>
+        <td>R$ ${Number(item.preco).toFixed(2)}</td>
+        <td>R$ ${totalItem.toFixed(2)}</td>
+        <td>
+          <button class="btn-vender" onclick="vender(${index})">Vender</button>
+          <button class="btn-edit" onclick="prepararEdicao(${index})">Editar</button>
+          <button class="btn-remove" onclick="remover(${index})">Excluir</button>
+        </td>
+      `;
+      tabela.appendChild(tr);
+
+      perdaProdSelect.innerHTML += `<option value="${index}">${item.nome} (Qtd: ${item.quantidade})</option>`;
+    });
+
+    let totalVendasRealizadas = vendas.reduce((acc, v) => acc + (v.quantidade * v.precoUnitario), 0);
+    document.getElementById('valorTotalVendas').textContent = `Total em Vendas: R$ ${totalVendasRealizadas.toFixed(2)}`;
+    renderizarVendas();
+    renderizarPerdas();
+  }
+
+  function vender(index) {
+    const produto = estoque[index];
+    const qtd = parseInt(prompt(`Quantas unidades de ${produto.nome} vender?`, "1"));
+
+    if (qtd > 0 && qtd <= produto.quantidade) {
+      vendas.push({
+        idVenda: Date.now(),
+        nome: produto.nome,
+        quantidade: qtd,
+        precoUnitario: produto.preco,
+        data: new Date().toLocaleString()
+      });
+      produto.quantidade -= qtd;
+      salvarTudo();
+      renderizarEstoque();
+    } else {
+      alert("Quantidade inválida ou insuficiente!");
+    }
+  }
+
+  function registrarPerda() {
+      const idx = perdaProdSelect.value;
+      const motivo = document.getElementById('perdaMotivo').value;
+      const qtd = parseInt(document.getElementById('perdaQuantidade').value);
+
+      if (idx === "" || !motivo || isNaN(qtd) || qtd <= 0) {
+          return alert("Preencha todos os campos da perda corretamente!");
+      }
+
+      const produto = estoque[idx];
+
+      if (qtd > produto.quantidade) {
+          return alert("A quantidade de perda não pode ser maior que o estoque!");
+      }
+
+      perdas.push({
+          data: new Date().toLocaleString(),
+          produto: produto.nome,
+          categoria: produto.categoria,
+          motivo: motivo,
+          quantidade: qtd,
+          valorPerda: qtd * produto.preco
+      });
+
+      produto.quantidade -= qtd;
+      document.getElementById('perdaQuantidade').value = "";
+      document.getElementById('perdaMotivo').value = "";
+      
+      salvarTudo();
+      renderizarEstoque();
+  }
+
+  function renderizarPerdas() {
+    const divPerdas = document.getElementById('secaoPerdas');
+    if (perdas.length === 0) {
+      divPerdas.innerHTML = "<h2>📉 Histórico de Perdas</h2><p style='text-align:center'>Nenhuma perda registrada.</p>";
+      return;
+    }
+
+    let totalPerdaFinanceira = perdas.reduce((acc, p) => acc + p.valorPerda, 0);
+
+    divPerdas.innerHTML = `
+      <div class="header-perdas">
+        <h2>📉 Histórico de Perdas</h2>
+        <button class="btn-zerar" onclick="zerarPerdas()">Limpar Perdas</button>
+      </div>
+      <div class="total total-perda">Prejuízo Total: R$ ${totalPerdaFinanceira.toFixed(2)}</div>
+      <table>
+        <thead>
+          <tr style="background: #fee2e2">
+            <th>Data</th>
+            <th>Produto</th>
+            <th>Categoria</th>
+            <th>Motivo</th>
+            <th>Qtd</th>
+            <th>Vlr. Perda</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${perdas.slice().reverse().map(p => `
+            <tr>
+              <td>${p.data}</td>
+              <td>${p.produto}</td>
+              <td>${p.categoria}</td>
+              <td><strong>${p.motivo}</strong></td>
+              <td>${p.quantidade}</td>
+              <td>R$ ${p.valorPerda.toFixed(2)}</td>
+            </tr>`).join('')}
+        </tbody>
+      </table>
+    `;
+  }
+
+  function zerarPerdas() {
+      if (confirm("Deseja apagar o histórico de perdas?")) {
+          perdas = [];
+          salvarTudo();
+          renderizarEstoque();
+      }
+  }
+
+  function remover(index) {
+    if(confirm("Remover este produto permanentemente?")) {
+      estoque.splice(index, 1);
+      salvarTudo();
+      renderizarEstoque();
+    }
+  }
+
+  function prepararEdicao(index) {
+    const item = estoque[index];
+    document.getElementById('nome').value = item.nome;
+    document.getElementById('categoriaSelect').value = item.categoria;
+    document.getElementById('tipo').value = item.tipo;
+    document.getElementById('validade').value = item.validade;
+    document.getElementById('quantidade').value = item.quantidade;
+    document.getElementById('preco').value = item.preco;
+    document.getElementById('editIndex').value = index;
+    document.getElementById('btnSalvar').textContent = "Atualizar Produto";
+    window.scrollTo(0,0);
+  }
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const index = parseInt(document.getElementById('editIndex').value);
+    const arquivo = document.getElementById('fotoArquivo').files[0];
+
+    const salvar = (foto) => {
+      const item = {
+        nome: document.getElementById('nome').value,
+        foto: foto || (index !== -1 ? estoque[index].foto : null),
+        categoria: document.getElementById('categoriaSelect').value,
+        tipo: document.getElementById('tipo').value,
+        validade: document.getElementById('validade').value,
+        quantidade: Number(document.getElementById('quantidade').value),
+        preco: Number(document.getElementById('preco').value)
+      };
+      if (index === -1) estoque.push(item);
+      else {
+        estoque[index] = item;
+        document.getElementById('editIndex').value = "-1";
+        document.getElementById('btnSalvar').textContent = "Salvar Produto";
+      }
+      salvarTudo();
+      renderizarEstoque();
+      form.reset();
+    };
+
+    if (arquivo) {
+      const leitor = new FileReader();
+      leitor.onload = (ev) => salvar(ev.target.result);
+      leitor.readAsDataURL(arquivo);
+    } else salvar(null);
+  });
+
+  function renderizarVendas() {
+    const divVendas = document.getElementById('secaoVendas');
+    if (vendas.length === 0) {
+      divVendas.innerHTML = "<h2>🛒 Histórico de Vendas</h2><p style='text-align:center'>Nenhuma venda realizada ainda.</p>";
+      return;
+    }
+
+    divVendas.innerHTML = `
+      <div class="header-vendas">
+        <h2>🛒 Histórico de Vendas</h2>
+        <button class="btn-zerar" onclick="zerarVendas()">Zerar Histórico</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Produto</th>
+            <th>Qtd</th>
+            <th>Total</th>
+            <th>Ação</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${vendas.slice().reverse().map((v, i) => {
+            const indexOriginal = vendas.length - 1 - i;
+            return `
+            <tr>
+              <td>${v.data}</td>
+              <td>${v.nome}</td>
+              <td>${v.quantidade}</td>
+              <td>R$ ${(v.quantidade * v.precoUnitario).toFixed(2)}</td>
+              <td><button style="background:#6b7280" onclick="desfazerVenda(${indexOriginal})">Desfazer</button></td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    `;
+  }
+
+  function desfazerVenda(indexVenda) {
+    if(confirm("Deseja cancelar esta venda e devolver os produtos ao estoque?")) {
+      const venda = vendas[indexVenda];
+      const produto = estoque.find(p => p.nome === venda.nome);
+      if (produto) produto.quantidade += venda.quantidade;
+      vendas.splice(indexVenda, 1);
+      salvarTudo();
+      renderizarEstoque();
+    }
+  }
+
+  function zerarVendas() {
+    if (confirm("⚠️ Isso apagará todo o histórico permanentemente. Continuar?")) {
+      vendas = [];
+      salvarTudo();
+      renderizarEstoque();
+    }
+  }
+
+  function gerarCSV() {
+    let csv = 'Data,Produto,Quantidade,Preco Unitario,Total,Tipo\n';
+    vendas.forEach(v => csv += `${v.data},${v.nome},${v.quantidade},${v.precoUnitario},${v.quantidade*v.precoUnitario},VENDA\n`);
+    perdas.forEach(p => csv += `${p.data},${p.produto},${p.quantidade},${p.valorPerda},${p.valorPerda},PERDA-${p.motivo}\n`);
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'relatorio_movimentacao.csv';
+    link.click();
+  }
+
+  function gerarTXT() {
+    let txt = "RELATÓRIO GERAL\n\nESTOQUE ATUAL:\n";
+    estoque.forEach(i => txt += `${i.nome}: ${i.quantidade}\n`);
+    txt += "\nULTIMAS VENDAS:\n";
+    vendas.forEach(v => txt += `${v.data} - ${v.nome}: ${v.quantidade} un.\n`);
+    txt += "\nPERDAS REGISTRADAS:\n";
+    perdas.forEach(p => txt += `${p.data} - ${p.produto} (${p.motivo}): ${p.quantidade} un.\n`);
+    const blob = new Blob([txt], { type: 'text/plain' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'relatorio_geral.txt';
+    link.click();
+  }
+
+  renderizarCategorias();
+  renderizarEstoque();
+</script>
+</body>
+</html>

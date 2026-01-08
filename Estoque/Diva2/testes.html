@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistema Administrativo Pro - Vendas e Estoque</title>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <style>
+    :root {
+      --bg-body: #F2E8E8;
+      --bg-container: #ffffff;
+      --text-main: #333333;
+      --primary-color: #E7357F;
+      --secondary-color: #555;
+      --danger-color: #ff4d4d;
+      --warning-color: #ffa500;
+      --success-color: #2ecc71;
+      --sale-color: #27ae60;
+      --border-color: #F2E8E8;
+    }
+
+    body.dark-mode {
+      --bg-body: #1a1a1a;
+      --bg-container: #2d2d2d;
+      --text-main: #e0e0e0;
+      --border-color: #444;
+    }
+
+    * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+    body { background: var(--bg-body); margin: 0; padding: 20px; color: var(--text-main); transition: 0.3s; }
+    h1 { text-align: center; color: var(--primary-color); margin-bottom: 30px; }
+
+    .dashboard {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      max-width: 1200px;
+      margin: 0 auto 20px auto;
+    }
+    .card {
+      background: var(--bg-container);
+      padding: 20px;
+      border-radius: 10px;
+      text-align: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.05);
+      border-bottom: 4px solid var(--primary-color);
+    }
+    .card.faturamento { border-color: var(--sale-color); }
+    .card h4 { margin: 0; font-size: 13px; color: var(--secondary-color); text-transform: uppercase; }
+    .card p { margin: 10px 0 0 0; font-size: 22px; font-weight: bold; color: var(--primary-color); }
+    .card.faturamento p { color: var(--sale-color); }
+
+    .container {
+      max-width: 1200px;
+      margin: 20px auto;
+      background: var(--bg-container);
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      border-top: 5px solid var(--primary-color);
+      position: relative;
+    }
+
+    .search-box {
+      width: 100%;
+      padding: 15px;
+      margin-bottom: 25px;
+      border-radius: 30px;
+      border: 2px solid var(--primary-color);
+      background: var(--bg-container);
+      color: var(--text-main);
+      outline: none;
+    }
+
+    .grid-form {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    input, select {
+      padding: 12px;
+      border-radius: 6px;
+      border: 2px solid var(--border-color);
+      background: var(--bg-container);
+      color: var(--text-main);
+    }
+
+    .prod-img { width: 60px; height: 60px; object-fit: cover; border-radius: 8px; background: #eee; }
+
+    button {
+      background: var(--primary-color);
+      color: #fff; border: none; cursor: pointer;
+      font-weight: bold; border-radius: 6px; padding: 10px; transition: 0.2s;
+    }
+
+    button:hover { filter: brightness(1.1); }
+    .btn-sale { background: var(--sale-color); }
+    .btn-danger { background: var(--danger-color); }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; }
+    th { background: var(--primary-color); color: #fff; padding: 12px; }
+    td { padding: 12px; border-bottom: 1px solid var(--border-color); text-align: center; vertical-align: middle; }
+
+    .status-badge { padding: 4px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; color: white; }
+    .status-critico { background: var(--danger-color); }
+    .status-alerta { background: var(--warning-color); }
+    .status-normal { background: var(--success-color); }
+
+    .secao-oculta { display: none; margin-top: 20px; animation: fadeIn 0.3s; }
+    @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+
+    /* BOTÕES FLUTUANTES */
+    .floating-buttons { position: fixed; bottom: 30px; right: 30px; display: flex; flex-direction: column; gap: 10px; z-index: 999; }
+    .btn-float { width: 50px; height: 50px; border-radius: 50%; font-size: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+
+    /* MODAL DE AJUDA */
+    .modal {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7);
+      align-items: center; justify-content: center; z-index: 2000;
+    }
+    .modal-content { 
+      background: var(--bg-container); padding: 30px; border-radius: 12px; 
+      max-width: 550px; width: 90%; position: relative; max-height: 85vh; overflow-y: auto;
+    }
+    .close-modal { position: absolute; top: 15px; right: 20px; font-size: 24px; cursor: pointer; color: var(--secondary-color); }
+  </style>
+</head>
+
+<body>
+
+<h1>📦 Gestão Pro: Vendas e Estoque</h1>
+
+<div class="dashboard">
+  <div class="card faturamento">
+    <h4>Faturamento Mensal</h4>
+    <p id="resumoVendas">R$ 0,00</p>
+  </div>
+  <div class="card">
+    <h4>Valor em Estoque</h4>
+    <p id="resumoPatrimonio">R$ 0,00</p>
+  </div>
+  <div class="card">
+    <h4>Total de Perdas</h4>
+    <p id="resumoPerda" style="color: var(--danger-color);">R$ 0,00</p>
+  </div>
+</div>
+
+<div class="container">
+  <input type="text" id="inputBusca" class="search-box" placeholder="🔍 Pesquisar produto por nome ou categoria..." onkeyup="renderizar()">
+
+  <h2 id="tituloForm">Cadastrar Novo Produto</h2>
+  <form id="formEstoque" class="grid-form">
+    <input type="hidden" id="editId">
+    <input id="nome" placeholder="Nome" required>
+    <select id="categoria" required>
+      <option value="">Categoria</option>
+      <option>Biojoia</option>
+      <option>Roupa</option>
+      <option>Verdura</option>
+      <option>Moda Circular</option>
+    </select>
+    <input id="quantidade" type="number" placeholder="Qtd" min="0" required>
+    <input id="preco" type="number" placeholder="Preço" step="0.01" required>
+    <input type="file" id="foto" accept="image/png, image/webp, image/jpeg" style="font-size: 11px;">
+    <button type="submit" id="btnSubmit">Salvar Produto</button>
+    <button type="button" id="btnCancelarEdit" style="background:#888; display:none;" onclick="cancelarEdicao()">Cancelar</button>
+  </form>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Foto</th>
+        <th>Produto</th>
+        <th>Estoque</th>
+        <th>Status</th>
+        <th>Preço</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody id="tabelaEstoque"></tbody>
+  </table>
+
+  <div style="margin-top: 25px; display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;">
+    <button class="btn-sale" onclick="abrirModulo('secaoVendas')">💰 Realizar Venda</button>
+    <button class="btn-danger" onclick="abrirModulo('secaoPerdas')">📉 Informar Perda</button>
+    <button onclick="gerarPDF()" style="background: #333;">🧾 Exportar Inventário</button>
+  </div>
+</div>
+
+<div id="secaoVendas" class="container secao-oculta" style="border-top-color: var(--sale-color);">
+  <h2 style="color: var(--sale-color);">💰 Registrar Venda</h2>
+  <form id="formVenda" class="grid-form">
+    <select id="selectVenda" required><option value="">Produto...</option></select>
+    <input id="qtdVenda" type="number" placeholder="Qtd" min="1" required>
+    <button type="submit" class="btn-sale">Concluir Venda</button>
+    <button type="button" onclick="this.parentElement.parentElement.style.display='none'">Fechar</button>
+  </form>
+</div>
+
+<div id="secaoPerdas" class="container secao-oculta" style="border-top-color: var(--danger-color);">
+  <h2 style="color: var(--danger-color);">📉 Registrar Perda</h2>
+  <form id="formPerda" class="grid-form">
+    <select id="selectPerda" required><option value="">Produto...</option></select>
+    <input id="qtdPerda" type="number" placeholder="Qtd" min="1" required>
+    <select id="motivoPerda" required>
+      <option value="">Motivo...</option>
+      <option>Vencimento</option>
+      <option>Dano/Quebra</option>
+      <option>Furto</option>
+    </select>
+    <button type="submit" class="btn-danger">Confirmar Baixa</button>
+    <button type="button" onclick="this.parentElement.parentElement.style.display='none'">Fechar</button>
+  </form>
+</div>
+
+<div class="floating-buttons">
+  <button class="btn-float" style="background:#333" onclick="toggleDarkMode()" title="Modo Escuro">🌓</button>
+  <button class="btn-float" style="background:var(--primary-color)" onclick="toggleHelp()" title="Ajuda">❓</button>
+</div>
+
+<div id="helpModal" class="modal">
+  <div class="modal-content">
+    <span class="close-modal" onclick="toggleHelp()">&times;</span>
+    <h3>📖 Guia do Sistema Administrativo</h3>
+    <hr>
+    <p><b>1. Cadastro de Imagens:</b> O sistema aceita PNG, WebP e JPEG. As imagens são comprimidas automaticamente para não ocupar espaço excessivo no seu navegador.</p>
+    <p><b>2. Registro de Vendas:</b> Ao realizar uma venda, o estoque é subtraído e o valor é somado ao <b>Faturamento Mensal</b> no topo da página.</p>
+    <p><b>3. Registro de Perdas:</b> Use para baixas de produtos danificados ou vencidos. Isso gera o indicador de <b>Prejuízo Total</b>.</p>
+    <p><b>4. Status de Estoque:</b> 
+      <br>🔴 <span style="color:var(--danger-color)">Crítico:</span> 5 ou menos itens.
+      <br>🟡 <span style="color:var(--warning-color)">Alerta:</span> 6 a 15 itens.
+      <br>🟢 <span style="color:var(--success-color)">Normal:</span> Mais de 15 itens.</p>
+    <p><b>5. Pesquisa:</b> Use a barra superior para filtrar produtos por nome ou categoria em tempo real.</p>
+  </div>
+</div>
+
+<script>
+  let estoque = JSON.parse(localStorage.getItem('estoque_v5')) || [];
+  let perdas = JSON.parse(localStorage.getItem('perdas_v5')) || [];
+  let vendas = JSON.parse(localStorage.getItem('vendas_v5')) || [];
+  let editandoId = null;
+
+  function salvar() {
+    localStorage.setItem('estoque_v5', JSON.stringify(estoque));
+    localStorage.setItem('perdas_v5', JSON.stringify(perdas));
+    localStorage.setItem('vendas_v5', JSON.stringify(vendas));
+    renderizar();
+  }
+
+  function toggleHelp() {
+    const modal = document.getElementById('helpModal');
+    modal.style.display = (modal.style.display === 'flex') ? 'none' : 'flex';
+  }
+
+  function abrirModulo(id) {
+    document.querySelectorAll('.secao-oculta').forEach(s => s.style.display = 'none');
+    const modulo = document.getElementById(id);
+    modulo.style.display = 'block';
+    window.scrollTo({ top: modulo.offsetTop - 20, behavior: 'smooth' });
+  }
+
+  const processarImagem = (file) => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.readAsDataURL(file);
+      reader.onload = (event) => {
+        const img = new Image();
+        img.src = event.target.result;
+        img.onload = () => {
+          const canvas = document.createElement('canvas');
+          const MAX_WIDTH = 200;
+          const scaleSize = MAX_WIDTH / img.width;
+          canvas.width = MAX_WIDTH;
+          canvas.height = img.height * scaleSize;
+          const ctx = canvas.getContext('2d');
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          resolve(canvas.toDataURL('image/webp', 0.7));
+        };
+      };
+    });
+  };
+
+  document.getElementById('formEstoque').onsubmit = async e => {
+    e.preventDefault();
+    const fotoFile = document.getElementById('foto').files[0];
+    let fotoData = null;
+
+    if (fotoFile) fotoData = await processarImagem(fotoFile);
+
+    const item = {
+      nome: document.getElementById('nome').value,
+      categoria: document.getElementById('categoria').value,
+      quantidade: +document.getElementById('quantidade').value,
+      preco: +document.getElementById('preco').value
+    };
+
+    if (editandoId) {
+      const idx = estoque.findIndex(p => p.id === editandoId);
+      estoque[idx] = { ...estoque[idx], ...item };
+      if (fotoData) estoque[idx].foto = fotoData;
+      cancelarEdicao();
+    } else {
+      estoque.push({ 
+        id: Date.now(), 
+        ...item, 
+        foto: fotoData || 'https://via.placeholder.com/60?text=Sem+Foto' 
+      });
+    }
+    
+    e.target.reset();
+    salvar();
+  };
+
+  document.getElementById('formVenda').onsubmit = e => {
+    e.preventDefault();
+    const id = +document.getElementById('selectVenda').value;
+    const qtd = +document.getElementById('qtdVenda').value;
+    const p = estoque.find(x => x.id === id);
+
+    if (p && p.quantidade >= qtd) {
+      p.quantidade -= qtd;
+      vendas.push({ total: qtd * p.preco, mes: new Date().getMonth(), ano: new Date().getFullYear() });
+      salvar();
+      e.target.reset();
+    } else { alert("Estoque insuficiente!"); }
+  };
+
+  document.getElementById('formPerda').onsubmit = e => {
+    e.preventDefault();
+    const id = +document.getElementById('selectPerda').value;
+    const qtd = +document.getElementById('qtdPerda').value;
+    const p = estoque.find(x => x.id === id);
+
+    if (p && p.quantidade >= qtd) {
+      p.quantidade -= qtd;
+      perdas.push({ prejuizo: qtd * p.preco });
+      salvar();
+      e.target.reset();
+    } else { alert("Estoque insuficiente!"); }
+  };
+
+  function renderizar() {
+    const t = document.getElementById('tabelaEstoque');
+    const busca = document.getElementById('inputBusca').value.toLowerCase();
+    t.innerHTML = '';
+    
+    const selVenda = document.getElementById('selectVenda');
+    const selPerda = document.getElementById('selectPerda');
+    selVenda.innerHTML = selPerda.innerHTML = '<option value="">Selecionar...</option>';
+
+    let valEstoque = 0;
+    estoque.forEach(p => {
+      valEstoque += (p.quantidade * p.preco);
+      
+      if (p.nome.toLowerCase().includes(busca) || p.categoria.toLowerCase().includes(busca)) {
+        const status = p.quantidade <= 5 ? {t:'CRÍTICO', c:'status-critico'} : p.quantidade <= 15 ? {t:'ALERTA', c:'status-alerta'} : {t:'NORMAL', c:'status-normal'};
+        t.innerHTML += `
+          <tr>
+            <td><img src="${p.foto}" class="prod-img"></td>
+            <td><b>${p.nome}</b><br><small>${p.categoria}</small></td>
+            <td>${p.quantidade}</td>
+            <td><span class="status-badge ${status.c}">${status.t}</span></td>
+            <td>R$ ${p.preco.toFixed(2)}</td>
+            <td>
+              <button style="background:var(--secondary-color)" onclick="prepararEdicao(${p.id})">✎</button>
+              <button class="btn-danger" onclick="removerProduto(${p.id})">✖</button>
+            </td>
+          </tr>`;
+      }
+      selVenda.innerHTML += `<option value="${p.id}">${p.nome} (${p.quantidade})</option>`;
+      selPerda.innerHTML += `<option value="${p.id}">${p.nome} (${p.quantidade})</option>`;
+    });
+
+    document.getElementById('resumoPatrimonio').innerText = `R$ ${valEstoque.toFixed(2)}`;
+    document.getElementById('resumoPerda').innerText = `R$ ${perdas.reduce((a,b)=>a+b.prejuizo,0).toFixed(2)}`;
+    
+    const hoje = new Date();
+    const totalMes = vendas.filter(v => v.mes === hoje.getMonth() && v.ano === hoje.getFullYear())
+                           .reduce((a,b)=>a+b.total, 0);
+    document.getElementById('resumoVendas').innerText = `R$ ${totalMes.toFixed(2)}`;
+  }
+
+  function prepararEdicao(id) {
+    const p = estoque.find(x => x.id === id);
+    editandoId = id;
+    document.getElementById('nome').value = p.nome;
+    document.getElementById('categoria').value = p.categoria;
+    document.getElementById('quantidade').value = p.quantidade;
+    document.getElementById('preco').value = p.preco;
+    document.getElementById('tituloForm').innerText = "Editar Produto";
+    document.getElementById('btnSubmit').innerText = "Atualizar";
+    document.getElementById('btnCancelarEdit').style.display = "inline-block";
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function cancelarEdicao() {
+    editandoId = null;
+    document.getElementById('formEstoque').reset();
+    document.getElementById('tituloForm').innerText = "Cadastrar Novo Produto";
+    document.getElementById('btnSubmit').innerText = "Salvar Produto";
+    document.getElementById('btnCancelarEdit').style.display = "none";
+  }
+
+  function removerProduto(id) { if(confirm("Excluir item do estoque?")) { estoque = estoque.filter(p=>p.id!==id); salvar(); } }
+  function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
+
+  function gerarPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.text("Inventário de Estoque - " + new Date().toLocaleDateString(), 10, 10);
+    let y = 20;
+    estoque.forEach(p => {
+      doc.text(`${p.nome} [${p.categoria}] - Qtd: ${p.quantidade} - Valor: R$${(p.quantidade*p.preco).toFixed(2)}`, 10, y);
+      y += 10;
+    });
+    doc.save('inventario.pdf');
+  }
+
+  renderizar();
+</script>
+
+</body>
+</html>

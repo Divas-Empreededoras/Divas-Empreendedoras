@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistema de Gestão de Estoque Inteligente</title>
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+
+  <style>
+    /* Variáveis de Cores para facilitar o Dark Mode */
+    :root {
+      --bg-body: #F2E8E8;
+      --bg-container: #ffffff;
+      --text-main: #333333;
+      --border-form: #eeeeee;
+      --bg-input: #ffffff;
+      --text-input: #333333;
+      --row-border: #eeeeee;
+      --header-table: #EED316;
+    }
+
+    /* Cores do Modo Escuro */
+    body.dark-mode {
+      --bg-body: #1a1a1a;
+      --bg-container: #2d2d2d;
+      --text-main: #f2f2f2;
+      --border-form: #444444;
+      --bg-input: #3d3d3d;
+      --text-input: #ffffff;
+      --row-border: #444444;
+      --header-table: #d4bc14;
+    }
+
+    * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; transition: background 0.3s, color 0.3s; }
+    body { background: var(--bg-body); margin: 0; padding: 20px; color: var(--text-main); }
+    h1 { text-align: center; color: #E7357F; }
+
+    .container { max-width: 1200px; margin: auto; background: var(--bg-container); padding: 25px; border-radius: 15px; box-shadow: 0 10px 25px rgba(0,0,0,0.05); position: relative; }
+
+    /* Botão Sol/Lua */
+    .theme-toggle {
+      position: absolute; top: 20px; right: 25px;
+      background: #EED316; border: none; border-radius: 50%;
+      width: 45px; height: 45px; cursor: pointer;
+      font-size: 20px; display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+
+    .search-container {
+      margin-bottom: 20px; display: flex; align-items: center; gap: 10px;
+      padding: 12px; border-radius: 10px; border: 2px solid #EED316; background: var(--bg-input);
+    }
+    .search-container input { flex: 1; border: none; font-size: 16px; outline: none; background: transparent; color: var(--text-input); }
+
+    form { 
+      display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 12px; 
+      margin-bottom: 25px; padding: 20px; background: var(--bg-container); border-radius: 10px; 
+      border: 2px solid var(--border-form);
+    }
+    form.editando { border-color: #E7357F; background: rgba(231, 53, 127, 0.05); }
+
+    input, button, select { padding: 12px; font-size: 14px; border: 1px solid var(--border-form); border-radius: 8px; outline: none; background: var(--bg-input); color: var(--text-input); }
+    
+    #btnSubmit { background: #E7357F; color: #fff; border: none; cursor: pointer; font-weight: bold; }
+    #btnSubmit:hover { opacity: 0.9; transform: scale(1.02); }
+    #btnCancelar { background: #636e72; color: #fff; border: none; cursor: pointer; display: none; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 10px; }
+    th { background: var(--header-table); color: #333; padding: 15px; font-size: 12px; text-transform: uppercase; }
+    td { padding: 12px; border-bottom: 1px solid var(--row-border); text-align: center; font-size: 14px; color: var(--text-main); }
+
+    .stock-baixo { background-color: rgba(238, 211, 22, 0.2) !important; }
+    .status-badge { padding: 5px 10px; border-radius: 20px; font-size: 11px; font-weight: bold; text-transform: uppercase; }
+    .status-ok { background: #dcfce7; color: #166534; }
+    .status-esgotado { background: #fee2e2; color: #991b1b; }
+    .alerta-texto { display: block; color: #b45309; font-size: 10px; font-weight: bold; margin-top: 4px; }
+
+    .img-produto { width: 45px; height: 45px; object-fit: cover; border-radius: 50%; border: 2px solid #F2E8E8; }
+    
+    .btn-venda { background: #27ae60; color: white; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+    .btn-edit { background: #eed516; color: #333; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; }
+    .btn-remove { background: #ff4d4d; color: white; border: none; padding: 6px 12px; border-radius: 5px; cursor: pointer; }
+    
+    .total-container { margin-top: 20px; padding: 15px; background: var(--header-table); border-radius: 8px; text-align: right; font-weight: bold; font-size: 1.4em; color: #333; }
+    
+    .div-relatorios { display: flex; justify-content: center; align-items: center; gap: 15px; flex-wrap: wrap; margin-top: 30px; padding: 20px; }
+    .btn-rel { padding: 12px 25px; border: none; border-radius: 8px; color: white; cursor: pointer; font-weight: bold; transition: 0.3s; display: flex; align-items: center; gap: 8px; }
+    .btn-pdf { background-color: #E7357F; }
+    .btn-excel { background-color: #27ae60; }
+    .btn-txt { background-color: #2d3436; }
+    .btn-hist { background-color: #0984e3; }
+
+    #secaoHistorico { margin-top: 30px; border-top: 2px solid var(--row-border); padding-top: 20px; display: none; }
+    .venda-item { background: var(--bg-input); padding: 10px; margin-bottom: 5px; border-radius: 5px; font-size: 0.9em; display: flex; justify-content: space-between; border: 1px solid var(--row-border); }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <button class="theme-toggle" id="themeToggle" onclick="toggleTheme()" title="Alternar Modo Claro/Escuro">🌞</button>
+
+  <h1>📦 Gestão de Estoque Inteligente</h1>
+  
+  <div class="search-container">
+    <span>🔍</span>
+    <input type="text" id="inputBusca" placeholder="Procurar por nome ou categoria..." onkeyup="filtrarEstoque()">
+  </div>
+
+  <form id="estoqueForm">
+    <input type="text" id="nome" placeholder="Nome do Produto" required />
+    <select id="categoria" required>
+      <option value="">Categoria</option>
+      <option value="Biojoia">Biojoia</option>
+      <option value="Roupa">Roupa</option>
+      <option value="Verdura">Verdura</option>
+      <option value="Moda Circular">Moda Circular</option>
+    </select>
+    <input type="number" id="quantidade" placeholder="Qtd" required min="0" />
+    <input type="number" id="preco" placeholder="Preço (R$)" step="0.01" required />
+    <input type="date" id="dataProduto" title="Data de Validade/Entrada" required />
+    <input type="file" id="foto" accept="image/*" />
+    <button type="submit" id="btnSubmit">CADASTRAR</button>
+    <button type="button" id="btnCancelar" onclick="cancelarEdicao()">CANCELAR</button>
+  </form>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Foto</th>
+        <th>Produto</th>
+        <th>Data</th>
+        <th>Estado</th>
+        <th>Qtd</th>
+        <th>Preço</th>
+        <th>Total</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody id="tabelaEstoque"></tbody>
+  </table>
+
+  <div class="total-container" id="valorTotal">Total Geral: R$ 0,00</div>
+
+  <div class="div-relatorios">
+    <button class="btn-rel btn-pdf" onclick="gerarPDF()">📄 PDF</button>
+    <button class="btn-rel btn-excel" onclick="gerarExcel()">📊 Excel</button>
+    <button class="btn-rel btn-txt" onclick="gerarTXT()">📝 Texto</button>
+    <button class="btn-rel btn-hist" onclick="toggleHistorico()">📜 Histórico Vendas</button>
+  </div>
+
+  <div id="secaoHistorico">
+    <h3>🛒 Últimas Vendas</h3>
+    <div id="listaHistorico"></div>
+    <button onclick="limparHistorico()" style="margin-top: 10px; background: #ff4d4d; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer;">Limpar Histórico</button>
+  </div>
+</div>
+
+<script>
+  const form = document.getElementById('estoqueForm');
+  const btnSubmit = document.getElementById('btnSubmit');
+  const btnCancelar = document.getElementById('btnCancelar');
+  const tabela = document.getElementById('tabelaEstoque');
+  const valorTotal = document.getElementById('valorTotal');
+  const inputBusca = document.getElementById('inputBusca');
+
+  let estoque = JSON.parse(localStorage.getItem('estoque')) || [];
+  let historicoVendas = JSON.parse(localStorage.getItem('historicoVendas')) || [];
+  let indexEmEdicao = -1;
+
+  // --- Função Dark Mode ---
+  function toggleTheme() {
+    const body = document.body;
+    const btn = document.getElementById('themeToggle');
+    body.classList.toggle('dark-mode');
+    
+    if (body.classList.contains('dark-mode')) {
+      btn.textContent = '🌙';
+      localStorage.setItem('theme', 'dark');
+    } else {
+      btn.textContent = '🌞';
+      localStorage.setItem('theme', 'light');
+    }
+  }
+
+  // Verificar preferência salva
+  if (localStorage.getItem('theme') === 'dark') {
+    document.body.classList.add('dark-mode');
+    document.getElementById('themeToggle').textContent = '🌙';
+  }
+
+  function salvarNoStorage() {
+    localStorage.setItem('estoque', JSON.stringify(estoque));
+    localStorage.setItem('historicoVendas', JSON.stringify(historicoVendas));
+  }
+
+  function renderizar(lista = estoque) {
+    tabela.innerHTML = '';
+    let totalAcumulado = 0;
+
+    lista.forEach((item) => {
+      const realIndex = estoque.indexOf(item);
+      const subtotal = item.quantidade * item.preco;
+      totalAcumulado += subtotal;
+
+      let statusHtml = item.quantidade <= 0 
+        ? '<span class="status-badge status-esgotado">Indisponível</span>' 
+        : '<span class="status-badge status-ok">Disponível</span>';
+      
+      let linhaClasse = (item.quantidade > 0 && item.quantidade <= 5) ? 'stock-baixo' : '';
+      let alertaTexto = (item.quantidade > 0 && item.quantidade <= 5) ? '<span class="alerta-texto">⚠️ QUASE ESGOTADO</span>' : '';
+
+      // Formatar data para exibição (DD/MM/AAAA)
+      let dataFormatada = item.data ? item.data.split('-').reverse().join('/') : '---';
+
+      const tr = document.createElement('tr');
+      tr.className = linhaClasse;
+      tr.innerHTML = `
+        <td><img src="${item.foto || 'https://via.placeholder.com/50'}" class="img-produto"></td>
+        <td><strong>${item.nome}</strong><br><small>${item.categoria}</small></td>
+        <td>${dataFormatada}</td>
+        <td>${statusHtml}</td>
+        <td>${item.quantidade} ${alertaTexto}</td>
+        <td>R$ ${item.preco.toFixed(2)}</td>
+        <td>R$ ${subtotal.toFixed(2)}</td>
+        <td>
+          <button class="btn-venda" onclick="vender(${realIndex})" title="Registrar Venda">💰 Vender</button>
+          <button class="btn-edit" onclick="prepararEdicao(${realIndex})">✏️</button>
+          <button class="btn-remove" onclick="remover(${realIndex})">🗑️</button>
+        </td>
+      `;
+      tabela.appendChild(tr);
+    });
+    valorTotal.textContent = `Total Geral: R$ ${totalAcumulado.toFixed(2)}`;
+    renderizarHistorico();
+  }
+
+  function vender(index) {
+    const item = estoque[index];
+    if (item.quantidade <= 0) { alert("Erro: Esgotado."); return; }
+    const qtdVenda = prompt(`Quantas unidades de "${item.nome}"?`, "1");
+    if (qtdVenda === null) return;
+    const quantidade = parseInt(qtdVenda);
+    if (isNaN(quantidade) || quantidade <= 0 || quantidade > item.quantidade) { alert("Qtd inválida."); return; }
+
+    if (confirm(`Confirmar venda?`)) {
+      estoque[index].quantidade -= quantidade;
+      historicoVendas.unshift({
+        produto: item.nome,
+        quantidade: quantidade,
+        total: item.preco * quantidade,
+        data: new Date().toLocaleString('pt-BR')
+      });
+      salvarNoStorage();
+      renderizar();
+    }
+  }
+
+  function renderizarHistorico() {
+    const lista = document.getElementById('listaHistorico');
+    lista.innerHTML = '';
+    historicoVendas.slice(0, 10).forEach(v => {
+      const div = document.createElement('div');
+      div.className = 'venda-item';
+      div.innerHTML = `<span><strong>${v.data}</strong> - ${v.produto} (x${v.quantidade})</span> <span style="color: #27ae60; font-weight: bold;">+ R$ ${v.total.toFixed(2)}</span>`;
+      lista.appendChild(div);
+    });
+  }
+
+  function toggleHistorico() {
+    const div = document.getElementById('secaoHistorico');
+    div.style.display = div.style.display === 'block' ? 'none' : 'block';
+  }
+
+  function limparHistorico() {
+    if(confirm("Limpar histórico?")) { historicoVendas = []; salvarNoStorage(); renderizar(); }
+  }
+
+  function prepararEdicao(index) {
+    indexEmEdicao = index;
+    const item = estoque[index];
+    document.getElementById('nome').value = item.nome;
+    document.getElementById('categoria').value = item.categoria;
+    document.getElementById('quantidade').value = item.quantidade;
+    document.getElementById('preco').value = item.preco;
+    document.getElementById('dataProduto').value = item.data || '';
+    form.classList.add('editando');
+    btnSubmit.textContent = "SALVAR ALTERAÇÕES";
+    btnCancelar.style.display = "block";
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function cancelarEdicao() {
+    indexEmEdicao = -1;
+    form.reset();
+    form.classList.remove('editando');
+    btnSubmit.textContent = "CADASTRAR";
+    btnCancelar.style.display = "none";
+  }
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const fotoArquivo = document.getElementById('foto').files[0];
+    if (fotoArquivo) {
+      const leitor = new FileReader();
+      leitor.onload = (evento) => processarFormulario(evento.target.result);
+      leitor.readAsDataURL(fotoArquivo);
+    } else {
+      processarFormulario(indexEmEdicao !== -1 ? estoque[indexEmEdicao].foto : null);
+    }
+  });
+
+  function processarFormulario(fotoBase64) {
+    const itemDados = {
+      nome: document.getElementById('nome').value,
+      categoria: document.getElementById('categoria').value,
+      quantidade: Number(document.getElementById('quantidade').value),
+      preco: Number(document.getElementById('preco').value),
+      data: document.getElementById('dataProduto').value,
+      foto: fotoBase64
+    };
+    if (indexEmEdicao === -1) estoque.push(itemDados);
+    else estoque[indexEmEdicao] = itemDados;
+    salvarNoStorage();
+    renderizar();
+    cancelarEdicao();
+  }
+
+  function filtrarEstoque() {
+    const termo = inputBusca.value.toLowerCase();
+    const filtrados = estoque.filter(i => i.nome.toLowerCase().includes(termo) || i.categoria.toLowerCase().includes(termo));
+    renderizar(filtrados);
+  }
+
+  function remover(index) {
+    if(confirm("Deseja eliminar?")) { estoque.splice(index, 1); salvarNoStorage(); renderizar(); }
+  }
+
+  // --- Exportações ---
+  function gerarPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.text("ESTOQUE ATUAL", 10, 10);
+    estoque.forEach((item, i) => doc.text(`${item.nome} (${item.data || 'S/D'}) - Qtd: ${item.quantidade}`, 10, 20 + (i * 10)));
+    doc.save('estoque.pdf');
+  }
+
+  function gerarExcel() {
+    const ws = XLSX.utils.json_to_sheet(estoque);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, "Estoque");
+    XLSX.writeFile(wb, "estoque.xlsx");
+  }
+
+  function gerarTXT() {
+    let txt = "ESTOQUE\n";
+    estoque.forEach(i => txt += `${i.nome} | Data: ${i.data} | Qtd: ${i.quantidade}\n`);
+    const blob = new Blob([txt], {type: 'text/plain'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'estoque.txt';
+    a.click();
+  }
+
+  renderizar();
+</script>
+</body>
+</html>

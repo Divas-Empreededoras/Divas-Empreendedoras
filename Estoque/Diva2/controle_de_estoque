@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <title>Controle de Estoque</title>
+  <style>
+    body {
+      font-family: Arial;
+      background: #F2E8E8;
+      padding: 30px;
+      text-align: center;
+    }
+    h1 { color: #E7357F; }
+    button {
+      background: #E7357F;
+      color: white;
+      border: none;
+      padding: 12px 25px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: bold;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+
+<body>
+
+  <h1>📦 Controle de Estoque</h1>
+  <p>Área para relatórios, gráficos e entradas/saídas.</p>
+
+  <button onclick="voltar()">⬅ Voltar</button>
+
+  <script>
+    function voltar() {
+      window.location.href = "index.html";
+    }
+  </script>
+
+</body>
+</html>
