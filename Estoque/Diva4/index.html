@@ -1,0 +1,408 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistema de Controle de Estoque Pro</title>
+  <style>
+    :root {
+      --primary: #E7357F;    /* Vinho/Rosa */
+      --secondary: #EED316;  /* Amarelo */
+      --bg-light: #F2E8E8;   /* Gelo */
+      --text-dark: #333;
+      --success: #22c55e;
+      --danger: #dc2626;
+      --warning: #f59e0b;
+    }
+
+    * { box-sizing: border-box; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; }
+    
+    body { background: var(--bg-light); margin: 0; padding: 20px; color: var(--text-dark); }
+    h1, h2 { text-align: center; color: var(--primary); }
+
+    .container { 
+      max-width: 1100px; 
+      margin: auto; 
+      background: #fff; 
+      padding: 30px; 
+      border-radius: 12px; 
+      box-shadow: 0 8px 20px rgba(0,0,0,0.08); 
+    }
+
+    .categoria-manager {
+      background: #fdf6d0;
+      padding: 15px;
+      border-radius: 8px;
+      margin-bottom: 20px;
+      display: flex;
+      gap: 10px;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    form { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); 
+      gap: 15px; 
+      margin-bottom: 30px;
+      padding: 20px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+    }
+
+    input, select, button { 
+      padding: 12px; 
+      font-size: 14px; 
+      border: 1px solid #ccc; 
+      border-radius: 6px;
+      outline: none;
+    }
+
+    button { 
+      background: var(--primary); 
+      color: #fff; 
+      border: none; 
+      cursor: pointer; 
+      font-weight: bold;
+      transition: 0.3s;
+    }
+
+    button:hover { opacity: 0.9; transform: translateY(-1px); }
+
+    .btn-vender { background: var(--success); color: white; margin-right: 5px; }
+    .btn-edit { background: #3b82f6; color: white; margin-right: 5px; }
+    .btn-remove { background: var(--danger); color: white; }
+    .btn-zerar { background: var(--danger); padding: 8px 15px; font-size: 12px; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+    th, td { padding: 12px; border-bottom: 1px solid #eee; text-align: center; }
+    th { background: var(--secondary); color: var(--text-dark); }
+
+    .img-produto { width: 50px; height: 50px; object-fit: cover; border-radius: 6px; }
+    .total { margin-top: 20px; font-size: 1.2rem; font-weight: bold; text-align: right; color: var(--success); }
+    
+    .relatorios { display: flex; gap: 15px; margin-top: 20px; }
+    .relatorios button { background: var(--text-dark); }
+
+    #secaoVendas { margin-top: 40px; border-top: 2px solid #eee; padding-top: 20px; }
+    .header-vendas { display: flex; justify-content: space-between; align-items: center; }
+  </style>
+</head>
+<body>
+
+<h1>📦 Sistema de Controle de Estoque</h1>
+
+<div class="container">
+  
+  <div class="categoria-manager">
+    <strong>Categorias:</strong>
+    <input type="text" id="novaCategoriaNome" placeholder="Nova categoria...">
+    <button onclick="adicionarCategoria()">+</button>
+    <select id="listaCategoriasGerenciar" onchange="acoesCategoria(this.value)">
+        <option value="">Gerenciar Categorias...</option>
+    </select>
+  </div>
+
+  <h2>Cadastro / Edição de Produto</h2>
+  <form id="estoqueForm">
+    <input type="hidden" id="editIndex" value="-1">
+    <input type="text" id="nome" placeholder="Nome do produto" required />
+    <input type="file" id="fotoArquivo" accept="image/*" />
+    <select id="categoriaSelect" required></select>
+    <select id="tipo" required>
+      <option value="">Tipo do produto</option>
+      <option value="Artesanal">Artesanal</option>
+      <option value="Industrializado">Industrializado</option>
+      <option value="Orgânico">Orgânico</option>
+      <option value="Reutilizado">Reutilizado</option>
+    </select>
+    <input type="date" id="validade" />
+    <input type="number" id="quantidade" placeholder="Qtd" required min="1" />
+    <input type="number" id="preco" placeholder="Preço (R$)" step="0.01" required min="0" />
+    <button type="submit" id="btnSalvar">Adicionar Produto</button>
+  </form>
+
+  <div style="overflow-x: auto;">
+    <table>
+      <thead>
+        <tr>
+          <th>Foto</th>
+          <th>Produto</th>
+          <th>Categoria</th>
+          <th>Tipo</th>
+          <th>Validade</th>
+          <th>Qtd</th>
+          <th>Preço</th>
+          <th>Total</th>
+          <th>Ações</th>
+        </tr>
+      </thead>
+      <tbody id="tabelaEstoque"></tbody>
+    </table>
+  </div>
+
+  <div class="total" id="valorTotalVendas">Total em Vendas: R$ 0,00</div>
+
+  <div class="relatorios">
+    <button onclick="gerarCSV()">📄 Exportar CSV</button>
+    <button onclick="gerarTXT()">🧾 Exportar Relatório</button>
+  </div>
+
+  <div id="secaoVendas"></div>
+</div>
+
+<script>
+  let estoque = JSON.parse(localStorage.getItem('estoque')) || [];
+  let categorias = JSON.parse(localStorage.getItem('categorias')) || ["Crocke", "Cosméticos", "Biojoia", "Roupa"];
+  let vendas = JSON.parse(localStorage.getItem('vendas')) || [];
+
+  const form = document.getElementById('estoqueForm');
+  const tabela = document.getElementById('tabelaEstoque');
+  const catSelect = document.getElementById('categoriaSelect');
+  const catGerenciar = document.getElementById('listaCategoriasGerenciar');
+
+  function salvarTudo() {
+    localStorage.setItem('estoque', JSON.stringify(estoque));
+    localStorage.setItem('categorias', JSON.stringify(categorias));
+    localStorage.setItem('vendas', JSON.stringify(vendas));
+  }
+
+  function renderizarCategorias() {
+    catSelect.innerHTML = '<option value="">Selecione a Categoria</option>';
+    catGerenciar.innerHTML = '<option value="">Gerenciar Categorias...</option>';
+    categorias.sort().forEach(cat => {
+      catSelect.innerHTML += `<option value="${cat}">${cat}</option>`;
+      catGerenciar.innerHTML += `<option value="${cat}">${cat}</option>`;
+    });
+  }
+
+  function adicionarCategoria() {
+    const nome = document.getElementById('novaCategoriaNome').value.trim();
+    if (nome && !categorias.includes(nome)) {
+      categorias.push(nome);
+      document.getElementById('novaCategoriaNome').value = '';
+      salvarTudo();
+      renderizarCategorias();
+    }
+  }
+
+  function acoesCategoria(nome) {
+    if (!nome) return;
+    const acao = prompt(`Digite 'E' para editar ou 'X' para excluir a categoria "${nome}":`).toUpperCase();
+    if (acao === 'X') {
+      if(confirm(`Excluir a categoria "${nome}"?`)) {
+        categorias = categorias.filter(c => c !== nome);
+      }
+    } else if (acao === 'E') {
+      const novoNome = prompt("Novo nome:", nome);
+      if (novoNome) {
+        categorias = categorias.map(c => c === nome ? novoNome : c);
+        estoque.forEach(item => { if(item.categoria === nome) item.categoria = novoNome; });
+      }
+    }
+    salvarTudo();
+    renderizarCategorias();
+    renderizarEstoque();
+    catGerenciar.value = "";
+  }
+
+  // --- ALTERAÇÃO PRINCIPAL ---
+  function renderizarEstoque() {
+    tabela.innerHTML = '';
+    
+    // Renderização da tabela de estoque
+    estoque.forEach((item, index) => {
+      const totalItem = item.quantidade * item.preco;
+      const tr = document.createElement('tr');
+      tr.innerHTML = `
+        <td><img src="${item.foto || ''}" class="img-produto" onerror="this.style.display='none'"></td>
+        <td>${item.nome}</td>
+        <td>${item.categoria}</td>
+        <td>${item.tipo}</td>
+        <td>${item.validade || '—'}</td>
+        <td>${item.quantidade}</td>
+        <td>R$ ${Number(item.preco).toFixed(2)}</td>
+        <td>R$ ${totalItem.toFixed(2)}</td>
+        <td>
+          <button class="btn-vender" onclick="vender(${index})">Vender</button>
+          <button class="btn-edit" onclick="prepararEdicao(${index})">Editar</button>
+          <button class="btn-remove" onclick="remover(${index})">X</button>
+        </td>
+      `;
+      tabela.appendChild(tr);
+    });
+
+    // CÁLCULO DA SOMA DAS VENDAS
+    let totalVendasRealizadas = 0;
+    vendas.forEach(venda => {
+        totalVendasRealizadas += (venda.quantidade * venda.precoUnitario);
+    });
+
+    // Atualiza o visor com a soma das vendas em vez do valor em estoque
+    document.getElementById('valorTotalVendas').textContent = `Total em Vendas: R$ ${totalVendasRealizadas.toFixed(2)}`;
+    
+    renderizarVendas();
+  }
+
+  function vender(index) {
+    const produto = estoque[index];
+    const qtd = parseInt(prompt(`Quantas unidades de ${produto.nome} vender?`, "1"));
+
+    if (qtd > 0 && qtd <= produto.quantidade) {
+      vendas.push({
+        idVenda: Date.now(),
+        nome: produto.nome,
+        quantidade: qtd,
+        precoUnitario: produto.preco,
+        data: new Date().toLocaleString()
+      });
+      produto.quantidade -= qtd;
+      salvarTudo();
+      renderizarEstoque();
+    } else {
+      alert("Quantidade inválida ou insuficiente!");
+    }
+  }
+
+  function desfazerVenda(indexVenda) {
+    if(confirm("Deseja cancelar esta venda e devolver os produtos ao estoque?")) {
+      const venda = vendas[indexVenda];
+      const produto = estoque.find(p => p.nome === venda.nome);
+      if (produto) {
+        produto.quantidade += venda.quantidade;
+      }
+      vendas.splice(indexVenda, 1);
+      salvarTudo();
+      renderizarEstoque();
+    }
+  }
+
+  function zerarVendas() {
+    if (vendas.length === 0) return;
+    if (confirm("⚠️ Isso apagará todo o histórico permanentemente. Continuar?")) {
+      vendas = [];
+      salvarTudo();
+      renderizarEstoque();
+    }
+  }
+
+  function renderizarVendas() {
+    const divVendas = document.getElementById('secaoVendas');
+    if (vendas.length === 0) {
+      divVendas.innerHTML = "<h2>🛒 Histórico de Vendas</h2><p style='text-align:center'>Nenhuma venda realizada ainda.</p>";
+      return;
+    }
+
+    divVendas.innerHTML = `
+      <div class="header-vendas">
+        <h2>🛒 Histórico de Vendas</h2>
+        <button class="btn-zerar" onclick="zerarVendas()">Zerar Histórico</button>
+      </div>
+      <table>
+        <thead>
+          <tr>
+            <th>Data</th>
+            <th>Produto</th>
+            <th>Qtd</th>
+            <th>Total</th>
+            <th>Ação</th>
+          </tr>
+        </thead>
+        <tbody>
+          ${vendas.slice().reverse().map((v, i) => {
+            const indexOriginal = vendas.length - 1 - i;
+            return `
+            <tr>
+              <td>${v.data}</td>
+              <td>${v.nome}</td>
+              <td>${v.quantidade}</td>
+              <td>R$ ${(v.quantidade * v.precoUnitario).toFixed(2)}</td>
+              <td><button style="background:#6b7280" onclick="desfazerVenda(${indexOriginal})">Desfazer</button></td>
+            </tr>`;
+          }).join('')}
+        </tbody>
+      </table>
+    `;
+  }
+
+  function prepararEdicao(index) {
+    const item = estoque[index];
+    document.getElementById('nome').value = item.nome;
+    document.getElementById('categoriaSelect').value = item.categoria;
+    document.getElementById('tipo').value = item.tipo;
+    document.getElementById('validade').value = item.validade;
+    document.getElementById('quantidade').value = item.quantidade;
+    document.getElementById('preco').value = item.preco;
+    document.getElementById('editIndex').value = index;
+    document.getElementById('btnSalvar').textContent = "Atualizar Produto";
+    window.scrollTo(0,0);
+  }
+
+  function remover(index) {
+    if(confirm("Remover este produto permanentemente?")) {
+      estoque.splice(index, 1);
+      salvarTudo();
+      renderizarEstoque();
+    }
+  }
+
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const index = parseInt(document.getElementById('editIndex').value);
+    const arquivo = document.getElementById('fotoArquivo').files[0];
+
+    const salvar = (foto) => {
+      const item = {
+        nome: document.getElementById('nome').value,
+        foto: foto || (index !== -1 ? estoque[index].foto : null),
+        categoria: document.getElementById('categoriaSelect').value,
+        tipo: document.getElementById('tipo').value,
+        validade: document.getElementById('validade').value,
+        quantidade: Number(document.getElementById('quantidade').value),
+        preco: Number(document.getElementById('preco').value)
+      };
+      if (index === -1) estoque.push(item);
+      else {
+        estoque[index] = item;
+        document.getElementById('editIndex').value = "-1";
+        document.getElementById('btnSalvar').textContent = "Adicionar Produto";
+      }
+      salvarTudo();
+      renderizarEstoque();
+      form.reset();
+    };
+
+    if (arquivo) {
+      const leitor = new FileReader();
+      leitor.onload = (ev) => salvar(ev.target.result);
+      leitor.readAsDataURL(arquivo);
+    } else salvar(null);
+  });
+
+  function gerarCSV() {
+    let csv = 'Data,Produto,Quantidade,Preco Unitario,Total\n';
+    vendas.forEach(v => csv += `${v.data},${v.nome},${v.quantidade},${v.precoUnitario},${v.quantidade*v.precoUnitario}\n`);
+    const blob = new Blob([csv], { type: 'text/csv' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'historico_vendas.csv';
+    link.click();
+  }
+
+  function gerarTXT() {
+    let txt = "RELATÓRIO GERAL\n\nESTOQUE ATUAL:\n";
+    estoque.forEach(i => txt += `${i.nome}: ${i.quantidade}\n`);
+    txt += "\nULTIMAS VENDAS:\n";
+    vendas.forEach(v => txt += `${v.data} - ${v.nome}: ${v.quantidade} un.\n`);
+    const blob = new Blob([txt], { type: 'text/plain' });
+    const link = document.createElement('a');
+    link.href = URL.createObjectURL(blob);
+    link.download = 'relatorio_geral.txt';
+    link.click();
+  }
+
+  renderizarCategorias();
+  renderizarEstoque();
+</script>
+</body>
+</html>

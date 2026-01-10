@@ -1,0 +1,370 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Sistema Administrativo - Controle de Perdas e Estoque</title>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+
+  <style>
+    :root {
+      --bg-body: #F2E8E8;
+      --bg-container: #ffffff;
+      --text-main: #333333;
+      --primary-color: #E7357F;
+      --secondary-color: #555;
+      --danger-color: #ff4d4d;
+      --warning-color: #ffa500;
+      --success-color: #2ecc71;
+      --edit-color: #cc148f;
+      --border-color: #F2E8E8;
+    }
+
+    body.dark-mode {
+      --bg-body: #1a1a1a;
+      --bg-container: #2d2d2d;
+      --text-main: #e0e0e0;
+      --border-color: #444;
+    }
+
+    * { box-sizing: border-box; font-family: 'Segoe UI', sans-serif; }
+    body { background: var(--bg-body); margin: 0; padding: 20px; color: var(--text-main); transition: 0.3s; }
+    h1, h2, h3 { text-align: center; color: var(--primary-color); }
+
+    .container {
+      max-width: 1100px;
+      margin: 20px auto;
+      background: var(--bg-container);
+      padding: 25px;
+      border-radius: 12px;
+      box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+      border-top: 5px solid var(--primary-color);
+      position: relative;
+    }
+
+    .grid-form {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+
+    input, select {
+      padding: 12px;
+      border-radius: 6px;
+      border: 2px solid var(--border-color);
+      background: var(--bg-container);
+      color: var(--text-main);
+    }
+
+    button {
+      background: var(--primary-color);
+      color: #fff;
+      border: none;
+      cursor: pointer;
+      font-weight: bold;
+      border-radius: 6px;
+      padding: 10px;
+      transition: 0.2s;
+    }
+
+    button:hover { opacity: 0.9; }
+    .btn-danger { background: var(--danger-color); }
+    .btn-edit { background: var(--edit-color); }
+    .btn-cancel { background: var(--secondary-color); display: none; }
+
+    table { width: 100%; border-collapse: collapse; margin-top: 15px; font-size: 14px; }
+    th { background: var(--primary-color); color: #fff; padding: 12px; }
+    td { padding: 10px; border-bottom: 1px solid var(--border-color); text-align: center; }
+
+    .status-badge {
+      padding: 4px 10px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: bold;
+      color: white;
+      text-transform: uppercase;
+    }
+    .status-critico { background: var(--danger-color); }
+    .status-alerta { background: var(--warning-color); }
+    .status-normal { background: var(--success-color); }
+
+    .close-panel {
+      position: absolute;
+      top: 15px;
+      right: 20px;
+      font-size: 24px;
+      cursor: pointer;
+      color: var(--secondary-color);
+    }
+
+    #painelPerdas { display: none; border-top-color: var(--danger-color); }
+    .badge-perda { background: var(--danger-color); padding: 3px 7px; border-radius: 4px; color: white; font-size: 11px; }
+
+    .floating-buttons { position: fixed; bottom: 30px; right: 30px; display: flex; flex-direction: column; gap: 10px; }
+    .btn-float { width: 50px; height: 50px; border-radius: 50%; font-size: 20px; box-shadow: 0 4px 10px rgba(0,0,0,0.2); }
+
+    .modal {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.6);
+      align-items: center; justify-content: center; z-index: 2000;
+    }
+    .modal-content { background: var(--bg-container); padding: 30px; border-radius: 12px; max-width: 500px; width: 90%; position: relative; }
+  </style>
+</head>
+
+<body>
+
+<h1>📦 Sistema Administrativo de Estoque</h1>
+
+<div class="container">
+  <h2 id="tituloForm">Entrada de Produtos</h2>
+  <form id="formEstoque" class="grid-form">
+    <input type="hidden" id="editId">
+    <input id="nome" placeholder="Nome do Produto" required>
+    <select id="categoria" required>
+      <option value="">Categoria</option>
+      <option>Biojoia</option>
+      <option>Roupa</option>
+      <option>Verdura</option>
+      <option>Moda Circular</option>
+    </select>
+    <input id="quantidade" type="number" placeholder="Qtd" min="0" required>
+    <input id="preco" type="number" placeholder="Preço Unit." step="0.01" required>
+    <button type="submit" id="btnSubmit">Cadastrar</button>
+    <button type="button" id="btnCancelarEdit" class="btn-cancel" onclick="cancelarEdicao()">Cancelar</button>
+  </form>
+
+  <table>
+    <thead>
+      <tr>
+        <th>Produto</th>
+        <th>Categoria</th>
+        <th>Estoque</th>
+        <th>Condição</th>
+        <th>Preço</th>
+        <th>Ações</th>
+      </tr>
+    </thead>
+    <tbody id="tabelaEstoque"></tbody>
+  </table>
+
+  <div style="margin-top: 20px; display: flex; gap: 10px; flex-wrap: wrap;">
+    <button onclick="document.getElementById('painelPerdas').style.display='block'">📉 Registrar Perda Administrativa</button>
+    <button onclick="gerarPDF()" style="background: #333;">🧾 Exportar Inventário (PDF)</button>
+  </div>
+</div>
+
+<div id="painelPerdas" class="container">
+  <span class="close-panel" onclick="this.parentElement.style.display='none'">&times;</span>
+  <h2 style="color: var(--danger-color);">📉 Baixa de Produtos (Perdas)</h2>
+  
+  <form id="formPerda" class="grid-form">
+    <select id="selectProdutoPerda" required>
+      <option value="">Selecionar Produto no Estoque...</option>
+    </select>
+    <input id="qtdPerda" type="number" placeholder="Qtd Perdida" min="1" required>
+    <select id="motivoPerda" required>
+      <option value="">Motivo da Perda...</option>
+      <option>Vencimento</option>
+      <option>Dano/Quebra</option>
+      <option>Furto</option>
+      <option>Erro de Lote</option>
+    </select>
+    <button type="submit" class="btn-danger">Confirmar Baixa</button>
+  </form>
+
+  <h3>Histórico de Ocorrências</h3>
+  <table>
+    <thead>
+      <tr>
+        <th>Data</th>
+        <th>Produto</th>
+        <th>Qtd</th>
+        <th>Motivo</th>
+        <th>Prejuízo Est.</th>
+      </tr>
+    </thead>
+    <tbody id="tabelaHistoricoPerdas"></tbody>
+  </table>
+</div>
+
+<div class="floating-buttons">
+  <button class="btn-float" style="background:#333" onclick="toggleDarkMode()" title="Modo Escuro">🌓</button>
+  <button class="btn-float" style="background:var(--primary-color)" onclick="toggleHelp()" title="Ajuda">❓</button>
+</div>
+
+<div id="helpModal" class="modal">
+  <div class="modal-content">
+    <span class="close-panel" onclick="toggleHelp()">&times;</span>
+    <h3>📖 Guia de Operação</h3>
+    <p><b>1. Edição:</b> Clique no botão azul para carregar os dados no formulário e atualizar um item existente.</p>
+    <p><b>2. Condição de Estoque:</b> Cores indicam necessidade de reposição (Crítico, Alerta ou Normal).</p>
+  </div>
+</div>
+
+<footer>
+  <p><strong>Gestão de Perdas & Inventário</strong> | 2024</p>
+</footer>
+
+<script>
+  let estoque = JSON.parse(localStorage.getItem('estoque_v3')) || [];
+  let perdas = JSON.parse(localStorage.getItem('perdas_v3')) || [];
+  let editandoId = null;
+
+  function salvar() {
+    localStorage.setItem('estoque_v3', JSON.stringify(estoque));
+    localStorage.setItem('perdas_v3', JSON.stringify(perdas));
+    renderizar();
+  }
+
+  function obterCondicao(q) {
+    if (q <= 5) return { txt: 'Crítico', cls: 'status-critico' };
+    if (q <= 15) return { txt: 'Alerta', cls: 'status-alerta' };
+    return { txt: 'Normal', cls: 'status-normal' };
+  }
+
+  // SUBMIT DO FORMULÁRIO (CADASTRO OU EDIÇÃO)
+  document.getElementById('formEstoque').onsubmit = e => {
+    e.preventDefault();
+    const nome = document.getElementById('nome').value;
+    const categoria = document.getElementById('categoria').value;
+    const quantidade = +document.getElementById('quantidade').value;
+    const preco = +document.getElementById('preco').value;
+
+    if (editandoId) {
+      // Lógica de Atualização
+      const index = estoque.findIndex(p => p.id === editandoId);
+      estoque[index] = { ...estoque[index], nome, categoria, quantidade, preco };
+      cancelarEdicao(); // Limpa o estado de edição
+    } else {
+      // Lógica de Cadastro Novo (ou soma se já existir)
+      const existe = estoque.find(p => p.nome.toLowerCase() === nome.toLowerCase());
+      if(existe) {
+        existe.quantidade += quantidade;
+      } else {
+        estoque.push({ id: Date.now(), nome, categoria, quantidade, preco });
+      }
+    }
+    
+    e.target.reset();
+    salvar();
+  };
+
+  function prepararEdicao(id) {
+    const produto = estoque.find(p => p.id === id);
+    if (!produto) return;
+
+    editandoId = id;
+    document.getElementById('nome').value = produto.nome;
+    document.getElementById('categoria').value = produto.categoria;
+    document.getElementById('quantidade').value = produto.quantidade;
+    document.getElementById('preco').value = produto.preco;
+
+    document.getElementById('tituloForm').innerText = "Editar Produto";
+    document.getElementById('btnSubmit').innerText = "Atualizar Produto";
+    document.getElementById('btnCancelarEdit').style.display = "inline-block";
+    
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }
+
+  function cancelarEdicao() {
+    editandoId = null;
+    document.getElementById('formEstoque').reset();
+    document.getElementById('tituloForm').innerText = "Entrada de Produtos";
+    document.getElementById('btnSubmit').innerText = "Cadastrar";
+    document.getElementById('btnCancelarEdit').style.display = "none";
+  }
+
+  // REGISTRO DE PERDA
+  document.getElementById('formPerda').onsubmit = e => {
+    e.preventDefault();
+    const idProd = +document.getElementById('selectProdutoPerda').value;
+    const qtdSub = +document.getElementById('qtdPerda').value;
+    const motivo = document.getElementById('motivoPerda').value;
+
+    const produto = estoque.find(p => p.id === idProd);
+
+    if (produto && produto.quantidade >= qtdSub) {
+      produto.quantidade -= qtdSub;
+      perdas.push({
+        data: new Date().toLocaleDateString('pt-BR'),
+        nome: produto.nome,
+        qtd: qtdSub,
+        motivo: motivo,
+        prejuizo: qtdSub * produto.preco
+      });
+      e.target.reset();
+      salvar();
+    } else {
+      alert("Erro: Quantidade insuficiente!");
+    }
+  };
+
+  function removerProduto(id) {
+    if(confirm("Deseja excluir este produto do inventário?")) {
+      estoque = estoque.filter(p => p.id !== id);
+      salvar();
+    }
+  }
+
+  function renderizar() {
+    const tEstoque = document.getElementById('tabelaEstoque');
+    tEstoque.innerHTML = '';
+    const selectP = document.getElementById('selectProdutoPerda');
+    selectP.innerHTML = '<option value="">Selecionar Produto no Estoque...</option>';
+
+    estoque.forEach(p => {
+      const cond = obterCondicao(p.quantidade);
+      tEstoque.innerHTML += `
+        <tr>
+          <td><b>${p.nome}</b></td>
+          <td>${p.categoria}</td>
+          <td>${p.quantidade}</td>
+          <td><span class="status-badge ${cond.cls}">${cond.txt}</span></td>
+          <td>R$ ${p.preco.toFixed(2)}</td>
+          <td>
+            <button class="btn-edit" onclick="prepararEdicao(${p.id})">Editar</button>
+            <button class="btn-danger" onclick="removerProduto(${p.id})">Remover</button>
+          </td>
+        </tr>`;
+      selectP.innerHTML += `<option value="${p.id}">${p.nome} (Saldo: ${p.quantidade})</option>`;
+    });
+
+    const tPerdas = document.getElementById('tabelaHistoricoPerdas');
+    tPerdas.innerHTML = '';
+    [...perdas].reverse().forEach(p => {
+      tPerdas.innerHTML += `
+        <tr>
+          <td>${p.data}</td>
+          <td>${p.nome}</td>
+          <td>${p.qtd}</td>
+          <td><span class="badge-perda">${p.motivo}</span></td>
+          <td>R$ ${p.prejuizo.toFixed(2)}</td>
+        </tr>`;
+    });
+  }
+
+  function toggleDarkMode() { document.body.classList.toggle('dark-mode'); }
+  function toggleHelp() {
+    const m = document.getElementById('helpModal');
+    m.style.display = m.style.display === 'flex' ? 'none' : 'flex';
+  }
+
+  function gerarPDF() {
+    const { jsPDF } = window.jspdf;
+    const doc = new jsPDF();
+    doc.text("Relatório de Inventário", 10, 15);
+    let y = 25;
+    estoque.forEach(p => {
+      doc.text(`${p.nome} | Qtd: ${p.quantidade} | Preço: R$${p.preco.toFixed(2)}`, 10, y);
+      y += 10;
+    });
+    doc.save('estoque.pdf');
+  }
+
+  renderizar();
+</script>
+
+</body>
+</html>
