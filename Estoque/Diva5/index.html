@@ -193,7 +193,7 @@
 
       signInWithEmailAndPassword(auth, email, password)
         .then(() => {
-          window.location.href = "home.html";
+          window.location.href = "./src/pages/home.html";
         })
         .catch((error) => {
           alert("Email ou senha incorretos");
@@ -204,7 +204,7 @@
     document.getElementById("googleLogin").addEventListener("click", () => {
       signInWithPopup(auth, provider)
         .then(() => {
-          window.location.href = "home.html";
+          window.location.href = "./src/pages/home.html";
         })
         .catch((error) => {
           alert("Erro ao autenticar com Google");
