@@ -1,0 +1,7 @@
+{
+  "nome": "Administrador",
+  "email": "admin@divas.com",
+  "role": "admin",
+  "ativo": true,
+  "criadoEm": "timestamp"
+}
