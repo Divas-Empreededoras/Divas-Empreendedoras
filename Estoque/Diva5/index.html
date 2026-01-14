@@ -1,11 +1,228 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="pt-br">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Home</title>
+  <meta charset="UTF-8">
+  <title>ERP | Divas Empreendedoras</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+
+  <!-- Bootstrap CSS -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+
+  <!-- Bootstrap Icons -->
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+
+  <!-- Fonte -->
+  <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+  <style>
+  body {
+    font-family: 'Poppins', sans-serif;
+    background-color: #f8f9fc;
+  }
+
+  /* Navbar */
+  .navbar {
+    background: linear-gradient(90deg, #b5179e, #7209b7);
+  }
+
+  .navbar-brand, .navbar-nav .nav-link {
+    color: #fff !important;
+    font-weight: 600;
+  }
+
+  /* Avatar hover */
+  .avatar {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    object-fit: cover;
+    transition: transform 0.3s ease;
+  }
+
+  .avatar:hover {
+    transform: scale(1.1);
+  }
+
+  /* Sidebar */
+  .sidebar {
+    min-height: 100vh;
+    background-color: #ffffff;
+    border-right: 1px solid #ddd;
+  }
+
+  .sidebar a {
+    color: #333;
+    padding: 12px;
+    display: block;
+    text-decoration: none;
+    border-radius: 6px;
+    margin-bottom: 6px;
+    transition: all 0.3s ease;
+  }
+
+  .sidebar a:hover {
+    background-color: #f1e4f7;
+    color: #7209b7;
+    transform: translateX(6px);
+  }
+
+  .sidebar a i {
+    margin-right: 8px;
+    transition: transform 0.3s ease;
+  }
+
+  .sidebar a:hover i {
+    transform: scale(1.2);
+  }
+
+  /* Cards */
+  .card-dashboard {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+    transition: all 0.3s ease;
+    cursor: pointer;
+  }
+
+  .card-dashboard:hover {
+    transform: translateY(-8px);
+    box-shadow: 0 12px 24px rgba(0,0,0,0.12);
+  }
+
+  /* Ícones dos atalhos */
+  .card-dashboard i {
+    transition: transform 0.3s ease;
+  }
+
+  .card-dashboard:hover i {
+    transform: scale(1.15);
+  }
+
+  /* Clique visual */
+  .card-dashboard:active {
+    transform: scale(0.97);
+  }
+
+  /* Footer */
+  footer {
+    background-color: #fff;
+    border-top: 1px solid #ddd;
+    text-align: center;
+    padding: 10px;
+    font-size: 14px;
+  }
+</style>
+
 </head>
 <body>
-    
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-expand-lg navbar-dark fixed-top">
+  <div class="container-fluid">
+    <a class="navbar-brand" href="#">Divas Empreendedoras | ERP</a>
+
+    <div class="dropdown">
+      <a class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" href="#" data-bs-toggle="dropdown">
+        <img src="https://i.pravatar.cc/150?img=47" class="avatar me-2">
+        <strong>Admin</strong>
+      </a>
+      <ul class="dropdown-menu dropdown-menu-end">
+        <li><a class="dropdown-item" href="#"><i class="bi bi-person"></i> Editar perfil</a></li>
+        <li><a class="dropdown-item" href="#"><i class="bi bi-arrow-repeat"></i> Trocar conta</a></li>
+        <li><hr class="dropdown-divider"></li>
+        <li><a class="dropdown-item text-danger" href="#"><i class="bi bi-box-arrow-right"></i> Sair</a></li>
+      </ul>
+    </div>
+  </div>
+</nav>
+
+<!-- CONTEÚDO -->
+<div class="container-fluid" style="margin-top: 70px;">
+  <div class="row">
+
+    <!-- SIDEBAR -->
+    <aside class="col-md-2 sidebar p-3">
+      <a href="#"><i class="bi bi-speedometer2"></i> Dashboard</a>
+      <a href="#"><i class="bi bi-box-seam"></i> Produtos / Estoque</a>
+      <a href="#"><i class="bi bi-cash-coin"></i> Vendas</a>
+      <a href="#"><i class="bi bi-people"></i> Divas</a>
+      <a href="#"><i class="bi bi-person-badge"></i> Usuários</a>
+      <a href="#"><i class="bi bi-graph-up"></i> Relatórios</a>
+      <a href="#"><i class="bi bi-gear"></i> Configurações</a>
+    </aside>
+
+    <!-- MAIN -->
+    <main class="col-md-10 p-4">
+
+      <h3 class="mb-4">Dashboard</h3>
+
+      <!-- INDICADORES -->
+      <div class="row g-4 mb-4">
+        <div class="col-md-3">
+          <div class="card card-dashboard p-3">
+            <h6>Total de Produtos</h6>
+            <h3>128</h3>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card card-dashboard p-3">
+            <h6>Vendas do Mês</h6>
+            <h3>R$ 4.580</h3>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card card-dashboard p-3">
+            <h6>Divas Ativas</h6>
+            <h3>12</h3>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card card-dashboard p-3">
+            <h6>Usuários</h6>
+            <h3>5</h3>
+          </div>
+        </div>
+      </div>
+
+      <!-- ATALHOS -->
+      <div class="row g-4">
+        <div class="col-md-3">
+          <div class="card card-dashboard p-3 text-center">
+            <i class="bi bi-plus-circle fs-1 text-primary"></i>
+            <p class="mt-2">Novo Produto</p>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card card-dashboard p-3 text-center">
+            <i class="bi bi-cart-check fs-1 text-success"></i>
+            <p class="mt-2">Registrar Venda</p>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card card-dashboard p-3 text-center">
+            <i class="bi bi-people fs-1 text-warning"></i>
+            <p class="mt-2">Gerenciar Divas</p>
+          </div>
+        </div>
+        <div class="col-md-3">
+          <div class="card card-dashboard p-3 text-center">
+            <i class="bi bi-person-plus fs-1 text-danger"></i>
+            <p class="mt-2">Novo Usuário</p>
+          </div>
+        </div>
+      </div>
+
+    </main>
+  </div>
+</div>
+
+<!-- FOOTER -->
+<footer class="mt-4">
+  © 2026 Divas Empreendedoras — Todos os direitos reservados
+</footer>
+
+<!-- Bootstrap JS -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
 </body>
 </html>
