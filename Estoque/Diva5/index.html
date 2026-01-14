@@ -2,10 +2,10 @@
 <html lang="pt-br">
 <head>
   <meta charset="UTF-8">
-  <title>ERP | Divas Empreendedoras</title>
+  <title>Login | ERP Divas Empreendedoras</title>
   <meta name="viewport" content="width=device-width, initial-scale=1">
 
-  <!-- Bootstrap CSS -->
+  <!-- Bootstrap -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
 
   <!-- Bootstrap Icons -->
@@ -17,208 +17,201 @@
   <style>
     body {
       font-family: 'Poppins', sans-serif;
-      background-color: #f8f9fc;
+      min-height: 100vh;
+      background: linear-gradient(135deg, #b5179e, #7209b7);
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
 
-    /* Navbar */
-    .navbar {
-      background: linear-gradient(90deg, #b5179e, #7209b7);
+    .login-card {
+      background: #ffffff;
+      border-radius: 18px;
+      box-shadow: 0 12px 32px rgba(0,0,0,0.25);
+      padding: 40px;
+      width: 100%;
+      max-width: 420px;
+      animation: fadeIn 0.8s ease;
     }
 
-    .navbar-brand, .navbar-nav .nav-link {
-      color: #fff !important;
+    @keyframes fadeIn {
+      from {
+        opacity: 0;
+        transform: translateY(25px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .login-title {
       font-weight: 600;
-    }
-
-    /* Avatar */
-    .avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: 50%;
-      object-fit: cover;
-      transition: transform 0.3s ease;
-    }
-
-    .avatar:hover {
-      transform: scale(1.1);
-    }
-
-    /* Sidebar */
-    .sidebar a {
-      color: #333;
-      padding: 12px;
-      display: block;
-      text-decoration: none;
-      border-radius: 6px;
-      margin-bottom: 6px;
-      transition: all 0.3s ease;
-    }
-
-    .sidebar a:hover {
-      background-color: #f1e4f7;
       color: #7209b7;
-      transform: translateX(6px);
     }
 
-    .sidebar a i {
-      margin-right: 8px;
+    .form-label {
+      font-weight: 500;
+      color: #560bad;
     }
 
-    /* Cards */
-    .card-dashboard {
+    .form-control {
+      border-radius: 12px;
+      padding: 12px;
+      border: 1px solid #ddd;
+    }
+
+    .form-control:focus {
+      border-color: #b5179e;
+      box-shadow: 0 0 0 0.15rem rgba(181, 23, 158, 0.25);
+    }
+
+    .btn-divas {
+      background: linear-gradient(90deg, #b5179e, #7209b7);
+      color: #ffffff;
       border: none;
       border-radius: 12px;
-      box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+      padding: 12px;
+      font-weight: 600;
       transition: all 0.3s ease;
-      cursor: pointer;
     }
 
-    .card-dashboard:hover {
-      transform: translateY(-6px);
-      box-shadow: 0 12px 24px rgba(0,0,0,0.12);
+    .btn-divas:hover {
+      opacity: 0.95;
+      transform: translateY(-2px);
     }
 
-    footer {
-      background-color: #fff;
-      border-top: 1px solid #ddd;
+    .btn-google {
+      border-radius: 12px;
+      padding: 12px;
+      font-weight: 500;
+      border: 1px solid #ddd;
+      transition: all 0.3s ease;
+    }
+
+    .btn-google:hover {
+      background-color: #f6f0fa;
+      border-color: #7209b7;
+      color: #560bad;
+    }
+
+    .divider {
+      display: flex;
+      align-items: center;
       text-align: center;
-      padding: 10px;
+      margin: 20px 0;
+      color: #999;
       font-size: 14px;
+    }
+
+    .divider::before,
+    .divider::after {
+      content: '';
+      flex: 1;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .divider:not(:empty)::before {
+      margin-right: .75em;
+    }
+
+    .divider:not(:empty)::after {
+      margin-left: .75em;
+    }
+
+    @media (max-width: 576px) {
+      .login-card {
+        padding: 30px 20px;
+      }
     }
   </style>
 </head>
 <body>
 
-<!-- NAVBAR -->
-<nav class="navbar navbar-dark fixed-top">
-  <div class="container-fluid">
-
-    <!-- Botão menu mobile -->
-    <button class="btn btn-outline-light d-md-none" data-bs-toggle="offcanvas" data-bs-target="#menuMobile">
-      <i class="bi bi-list"></i>
-    </button>
-
-    <a class="navbar-brand ms-2" href="#">Divas ERP</a>
-
-    <!-- Perfil -->
-    <div class="dropdown">
-      <a class="d-flex align-items-center text-white text-decoration-none dropdown-toggle" href="#" data-bs-toggle="dropdown">
-        <img src="https://i.pravatar.cc/150?img=47" class="avatar me-2">
-        <strong class="d-none d-sm-inline">Admin</strong>
-      </a>
-      <ul class="dropdown-menu dropdown-menu-end">
-        <li><a class="dropdown-item" href="#"><i class="bi bi-person"></i> Editar perfil</a></li>
-        <li><a class="dropdown-item" href="#"><i class="bi bi-arrow-repeat"></i> Trocar conta</a></li>
-        <li><hr class="dropdown-divider"></li>
-        <li><a class="dropdown-item text-danger" href="#"><i class="bi bi-box-arrow-right"></i> Sair</a></li>
-      </ul>
+  <div class="login-card">
+    <div class="text-center mb-4">
+      <h3 class="login-title">Divas Empreendedoras</h3>
+      <p class="text-muted">Acesso ao ERP</p>
     </div>
 
-  </div>
-</nav>
-
-<!-- OFFCANVAS MOBILE -->
-<div class="offcanvas offcanvas-start" id="menuMobile">
-  <div class="offcanvas-header">
-    <h5>Menu</h5>
-    <button class="btn-close" data-bs-dismiss="offcanvas"></button>
-  </div>
-  <div class="offcanvas-body sidebar">
-    <a href="#"><i class="bi bi-speedometer2"></i> Dashboard</a>
-    <a href="#"><i class="bi bi-box-seam"></i> Produtos</a>
-    <a href="#"><i class="bi bi-cash-coin"></i> Vendas</a>
-    <a href="#"><i class="bi bi-people"></i> Divas</a>
-    <a href="#"><i class="bi bi-person-badge"></i> Usuários</a>
-    <a href="#"><i class="bi bi-graph-up"></i> Relatórios</a>
-    <a href="#"><i class="bi bi-gear"></i> Configurações</a>
-  </div>
-</div>
-
-<!-- CONTEÚDO -->
-<div class="container-fluid" style="margin-top:70px;">
-  <div class="row">
-
-    <!-- SIDEBAR DESKTOP -->
-    <aside class="col-md-2 d-none d-md-block sidebar p-3 bg-white border-end">
-      <a href="#"><i class="bi bi-speedometer2"></i> Dashboard</a>
-      <a href="#"><i class="bi bi-box-seam"></i> Produtos</a>
-      <a href="#"><i class="bi bi-cash-coin"></i> Vendas</a>
-      <a href="#"><i class="bi bi-people"></i> Divas</a>
-      <a href="#"><i class="bi bi-person-badge"></i> Usuários</a>
-      <a href="#"><i class="bi bi-graph-up"></i> Relatórios</a>
-      <a href="#"><i class="bi bi-gear"></i> Configurações</a>
-    </aside>
-
-    <!-- MAIN -->
-    <main class="col-12 col-md-10 p-4">
-
-      <h4 class="mb-4">Dashboard</h4>
-
-      <!-- INDICADORES -->
-      <div class="row g-3 mb-4">
-        <div class="col-12 col-sm-6 col-lg-3">
-          <div class="card card-dashboard p-3">
-            <h6>Total de Produtos</h6>
-            <h3>128</h3>
-          </div>
-        </div>
-        <div class="col-12 col-sm-6 col-lg-3">
-          <div class="card card-dashboard p-3">
-            <h6>Vendas do Mês</h6>
-            <h3>R$ 4.580</h3>
-          </div>
-        </div>
-        <div class="col-12 col-sm-6 col-lg-3">
-          <div class="card card-dashboard p-3">
-            <h6>Divas Ativas</h6>
-            <h3>12</h3>
-          </div>
-        </div>
-        <div class="col-12 col-sm-6 col-lg-3">
-          <div class="card card-dashboard p-3">
-            <h6>Usuários</h6>
-            <h3>5</h3>
-          </div>
-        </div>
+    <!-- FORM LOGIN -->
+    <form id="loginForm">
+      <div class="mb-3">
+        <label class="form-label">Email</label>
+        <input type="email" id="email" class="form-control" placeholder="seu@email.com" required>
       </div>
 
-      <!-- ATALHOS -->
-      <div class="row g-3">
-        <div class="col-6 col-lg-3">
-          <div class="card card-dashboard p-3 text-center">
-            <i class="bi bi-plus-circle fs-1 text-primary"></i>
-            <p class="mt-2">Novo Produto</p>
-          </div>
-        </div>
-        <div class="col-6 col-lg-3">
-          <div class="card card-dashboard p-3 text-center">
-            <i class="bi bi-cart-check fs-1 text-success"></i>
-            <p class="mt-2">Registrar Venda</p>
-          </div>
-        </div>
-        <div class="col-6 col-lg-3">
-          <div class="card card-dashboard p-3 text-center">
-            <i class="bi bi-people fs-1 text-warning"></i>
-            <p class="mt-2">Gerenciar Divas</p>
-          </div>
-        </div>
-        <div class="col-6 col-lg-3">
-          <div class="card card-dashboard p-3 text-center">
-            <i class="bi bi-person-plus fs-1 text-danger"></i>
-            <p class="mt-2">Novo Usuário</p>
-          </div>
-        </div>
+      <div class="mb-3">
+        <label class="form-label">Senha</label>
+        <input type="password" id="password" class="form-control" placeholder="••••••••" required>
       </div>
 
-    </main>
+      <button type="submit" class="btn btn-divas w-100 mb-3">
+        Entrar
+      </button>
+    </form>
+
+    <div class="divider">ou</div>
+
+    <!-- GOOGLE LOGIN -->
+    <button id="googleLogin" class="btn btn-light btn-google w-100">
+      <i class="bi bi-google me-2"></i> Entrar com Google
+    </button>
   </div>
-</div>
 
-<!-- FOOTER -->
-<footer class="mt-4">
-  © 2026 Divas Empreendedoras — Todos os direitos reservados
-</footer>
+  <!-- Bootstrap JS -->
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
 
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+  <!-- Firebase -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+    import { 
+      getAuth, 
+      signInWithEmailAndPassword, 
+      GoogleAuthProvider, 
+      signInWithPopup 
+    } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-auth.js";
+
+    const firebaseConfig = {
+  apiKey: "AIzaSyCvHIU1nYdp0YFdEK5Vhx4owQywuslDFlY",
+  authDomain: "divas-empreendedoras-erp.firebaseapp.com",
+  projectId: "divas-empreendedoras-erp",
+  storageBucket: "divas-empreendedoras-erp.firebasestorage.app",
+  messagingSenderId: "424568680710",
+  appId: "1:424568680710:web:d5c61ddbf9830d9330ae87"
+  };
+
+    const app = initializeApp(firebaseConfig);
+    const auth = getAuth(app);
+    const provider = new GoogleAuthProvider();
+
+    document.getElementById("loginForm").addEventListener("submit", (e) => {
+      e.preventDefault();
+
+      const email = document.getElementById("email").value.trim();
+      const password = document.getElementById("password").value.trim();
+
+      signInWithEmailAndPassword(auth, email, password)
+        .then(() => {
+          window.location.href = "home.html";
+        })
+        .catch((error) => {
+          alert("Email ou senha incorretos");
+          console.error(error.code, error.message);
+        });
+    });
+
+    document.getElementById("googleLogin").addEventListener("click", () => {
+      signInWithPopup(auth, provider)
+        .then(() => {
+          window.location.href = "home.html";
+        })
+        .catch((error) => {
+          alert("Erro ao autenticar com Google");
+          console.error(error.code, error.message);
+        });
+    });
+  </script>
+
 </body>
 </html>
