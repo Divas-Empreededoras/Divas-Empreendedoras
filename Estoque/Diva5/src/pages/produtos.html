@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+<meta charset="UTF-8">
+<title>Produtos | ERP Divas Empreendedoras</title>
+<meta name="viewport" content="width=device-width, initial-scale=1">
+
+<link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/bootstrap-icons/font/bootstrap-icons.css" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;600&display=swap" rel="stylesheet">
+
+<style>
+body {
+  font-family: 'Poppins', sans-serif;
+  background:#f8f9fc;
+}
+
+/* Navbar */
+.navbar {
+  background: linear-gradient(90deg, #b5179e, #7209b7);
+}
+
+.navbar-brand {
+  color:#fff!important;
+  font-weight:600;
+}
+
+/* Avatar */
+.avatar {
+  width:40px;
+  height:40px;
+  border-radius:50%;
+  object-fit:cover;
+}
+
+/* Sidebar */
+.sidebar a {
+  color:#333;
+  padding:12px;
+  display:block;
+  text-decoration:none;
+  border-radius:6px;
+  margin-bottom:6px;
+  transition:.3s;
+}
+
+.sidebar a:hover {
+  background:#f1e4f7;
+  color:#7209b7;
+  transform:translateX(6px);
+}
+
+/* Tabela */
+.table-responsive {
+  background:#fff;
+  border-radius:12px;
+  padding:15px;
+  box-shadow:0 6px 18px rgba(0,0,0,.08);
+}
+
+table img {
+  width:50px;
+  height:50px;
+  object-fit:cover;
+  border-radius:8px;
+}
+
+footer {
+  background:#fff;
+  border-top:1px solid #ddd;
+  text-align:center;
+  padding:10px;
+  font-size:14px;
+  margin-top:30px;
+}
+</style>
+</head>
+
+<body>
+
+<!-- NAVBAR -->
+<nav class="navbar navbar-dark fixed-top">
+<div class="container-fluid">
+
+  <!-- BOTÃO MOBILE -->
+  <button class="btn btn-outline-light d-md-none" data-bs-toggle="offcanvas" data-bs-target="#menuMobile">
+    <i class="bi bi-list"></i>
+  </button>
+
+  <a class="navbar-brand ms-2">Divas ERP</a>
+
+  <!-- PERFIL -->
+  <div class="dropdown">
+    <a class="d-flex align-items-center text-white text-decoration-none dropdown-toggle"
+       href="#" data-bs-toggle="dropdown">
+      <img src="https://i.pravatar.cc/150" class="avatar me-2">
+      <strong>Usuário</strong>
+    </a>
+    <ul class="dropdown-menu dropdown-menu-end">
+      <li><a class="dropdown-item"><i class="bi bi-person"></i> Perfil</a></li>
+      <li><hr class="dropdown-divider"></li>
+      <li><a class="dropdown-item text-danger">Sair</a></li>
+    </ul>
+  </div>
+
+</div>
+</nav>
+
+<!-- OFFCANVAS MOBILE -->
+<div class="offcanvas offcanvas-start" id="menuMobile">
+<div class="offcanvas-header">
+  <h5>Menu</h5>
+  <button class="btn-close" data-bs-dismiss="offcanvas"></button>
+</div>
+<div class="offcanvas-body sidebar">
+  <a href="#"><i class="bi bi-speedometer2"></i> Dashboard</a>
+  <a href="./produtos.html"><i class="bi bi-box-seam"></i> Produtos</a>
+  <a href="#"><i class="bi bi-cash-coin"></i> Vendas</a>
+  <a href="#"><i class="bi bi-people"></i> Divas</a>
+  <a href="#"><i class="bi bi-person-badge"></i> Usuários</a>
+  <a href="#"><i class="bi bi-gear"></i> Configurações</a>
+</div>
+</div>
+
+<!-- CONTEÚDO -->
+<div class="container-fluid" style="margin-top:70px;">
+<div class="row">
+
+<!-- SIDEBAR DESKTOP -->
+<aside class="col-md-2 d-none d-md-block sidebar p-3 bg-white border-end">
+  <a href="./home.html"><i class="bi bi-speedometer2"></i> Dashboard</a>
+  <a href="./produtos.html"><i class="bi bi-box-seam"></i> Produtos</a>
+  <a href="#"><i class="bi bi-cash-coin"></i> Vendas</a>
+  <a href="#"><i class="bi bi-people"></i> Divas</a>
+  <a href="#"><i class="bi bi-person-badge"></i> Usuários</a>
+  <a href="#"><i class="bi bi-gear"></i> Configurações</a>
+</aside>
+
+<!-- MAIN -->
+<main class="col-12 col-md-10 p-4">
+
+<h4 class="mb-4">Produtos / Estoque</h4>
+
+<div class="table-responsive">
+<table class="table table-hover align-middle">
+<thead class="table-light">
+<tr>
+  <th><input type="checkbox" id="checkAll"></th>
+  <th>Imagem</th>
+  <th>Descrição *</th>
+  <th>Marca</th>
+  <th>Grupo</th>
+  <th>Custo</th>
+  <th>Venda</th>
+  <th>Markup</th>
+  <th>Ações</th>
+</tr>
+</thead>
+<tbody id="tabelaProdutos"></tbody>
+</table>
+</div>
+
+<!-- BOTÕES -->
+<div class="mt-3 d-flex gap-2 flex-wrap">
+  <button class="btn btn-info" onclick="visualizarProduto()">Visualizar</button>
+  <button class="btn btn-success" onclick="abrirModal()">Criar</button>
+  <button class="btn btn-warning" onclick="editarSelecionado()">Editar</button>
+  <button class="btn btn-danger" onclick="excluirSelecionados()">Excluir</button>
+</div>
+
+
+</main>
+</div>
+</div>
+
+<footer>
+<script>
+const anoAtual = new Date().getFullYear();
+document.write(` &copy; ${anoAtual} Divas Empreendedoras — Todos os direitos reservados`);
+</script>
+</footer>
+
+<!-- MODAL -->
+<div class="modal fade" id="produtoModal" tabindex="-1">
+  <div class="modal-dialog modal-dialog-centered modal-xl modal-dialog-scrollable">
+    <div class="modal-content">
+
+      <div class="modal-header">
+        <h5 class="modal-title" id="modalTitulo">Produto</h5>
+        <button class="btn-close" data-bs-dismiss="modal"></button>
+      </div>
+
+      <div class="modal-body">
+        <input type="hidden" id="produtoId">
+
+        <div class="row g-3">
+
+          <!-- IMAGEM -->
+          <div class="col-md-3 text-center">
+            <img id="previewImagem" src="https://via.placeholder.com/150"
+              class="img-fluid rounded mb-2">
+            <input type="url" class="form-control" id="imagem"
+              placeholder="URL da imagem">
+          </div>
+
+          <!-- DADOS PRINCIPAIS -->
+          <div class="col-md-9">
+            <div class="row g-3">
+
+              <div class="col-md-6">
+                <label>Descrição *</label>
+                <input class="form-control" id="descricao">
+              </div>
+
+              <div class="col-md-3">
+                <label>Marca</label>
+                <input class="form-control" id="marca">
+              </div>
+
+              <div class="col-md-3">
+                <label>Setor</label>
+                <input class="form-control" id="setor">
+              </div>
+
+              <div class="col-md-3">
+                <label>Grupo</label>
+                <input class="form-control" id="grupo">
+              </div>
+
+              <div class="col-md-3">
+                <label>Sub Grupo</label>
+                <input class="form-control" id="subgrupo">
+              </div>
+
+              <div class="col-md-3">
+                <label>Código Produto</label>
+                <input class="form-control" id="codigoProduto">
+              </div>
+
+              <div class="col-md-3">
+                <label>Código de Barras</label>
+                <input class="form-control" id="codigoBarras">
+              </div>
+
+              <div class="col-md-3">
+                <label>Preço de Custo</label>
+                <input class="form-control" type="number" id="custo">
+              </div>
+
+              <div class="col-md-3">
+                <label>Preço de Venda</label>
+                <input class="form-control" type="number" id="venda">
+              </div>
+
+              <div class="col-md-3">
+                <label>Markup (%)</label>
+                <input class="form-control" id="markup" disabled>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+
+      <div class="modal-footer">
+        <button id="btnSalvar" onclick="salvarProduto()" class="btn btn-primary">
+            Salvar
+        </button>
+
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+
+<!-- FIREBASE -->
+<script type="module">
+/* =======================
+   FIREBASE CONFIG
+======================= */
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.7.1/firebase-app.js";
+import {
+  getFirestore,
+  collection,
+  addDoc,
+  getDocs,
+  deleteDoc,
+  doc,
+  updateDoc,
+  getDoc
+} from "https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyCvHIU1nYdp0YFdEK5Vhx4owQywuslDFlY",
+  authDomain: "divas-empreendedoras-erp.firebaseapp.com",
+  projectId: "divas-empreendedoras-erp",
+  storageBucket: "divas-empreendedoras-erp.firebasestorage.app",
+  messagingSenderId: "424568680710",
+  appId: "1:424568680710:web:d5c61ddbf9830d9330ae87"
+};
+
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+/* =======================
+   ELEMENTOS
+======================= */
+const tabela = document.getElementById("tabelaProdutos");
+const modalEl = document.getElementById("produtoModal");
+const modal = new bootstrap.Modal(modalEl);
+
+const produtoId = document.getElementById("produtoId");
+const imagem = document.getElementById("imagem");
+const previewImagem = document.getElementById("previewImagem");
+const descricao = document.getElementById("descricao");
+const marca = document.getElementById("marca");
+const grupo = document.getElementById("grupo");
+const subgrupo = document.getElementById("subgrupo");
+const setor = document.getElementById("setor");
+const codigoProduto = document.getElementById("codigoProduto");
+const codigoBarras = document.getElementById("codigoBarras");
+const custo = document.getElementById("custo");
+const venda = document.getElementById("venda");
+const markup = document.getElementById("markup");
+const modalTitulo = document.getElementById("modalTitulo");
+const btnSalvar = document.getElementById("btnSalvar");
+
+/* =======================
+   FUNÇÕES AUXILIARES
+======================= */
+
+// Limpa formulário
+function limparCampos() {
+  produtoId.value = "";
+  imagem.value = "";
+  previewImagem.src = "https://via.placeholder.com/150";
+  descricao.value = "";
+  marca.value = "";
+  grupo.value = "";
+  subgrupo.value = "";
+  setor.value = "";
+  codigoProduto.value = "";
+  codigoBarras.value = "";
+  custo.value = "";
+  venda.value = "";
+  markup.value = "";
+}
+
+// Habilita / desabilita campos
+function setCampos(ativo) {
+  [
+    imagem, descricao, marca, grupo, subgrupo,
+    setor, codigoProduto, codigoBarras,
+    custo, venda
+  ].forEach(c => c.disabled = !ativo);
+
+  btnSalvar.style.display = ativo ? "inline-block" : "none";
+}
+
+// Calcula markup automaticamente
+function calcularMarkup() {
+  const c = Number(custo.value);
+  const v = Number(venda.value);
+
+  if (c > 0 && v > 0) {
+    markup.value = (((v - c) / c) * 100).toFixed(2) + "%";
+  } else {
+    markup.value = "";
+  }
+}
+
+custo.addEventListener("input", calcularMarkup);
+venda.addEventListener("input", calcularMarkup);
+
+// Atualiza preview da imagem
+imagem.addEventListener("input", () => {
+  previewImagem.src = imagem.value || "https://via.placeholder.com/150";
+});
+
+// Retorna IDs selecionados
+function getSelecionados() {
+  return [...document.querySelectorAll(".chk:checked")].map(c => c.value);
+}
+
+/* =======================
+   CRUD
+======================= */
+
+// Carregar produtos
+async function carregarProdutos() {
+  tabela.innerHTML = "";
+  const snap = await getDocs(collection(db, "produtos"));
+
+  snap.forEach(docSnap => {
+    const p = docSnap.data();
+
+    tabela.innerHTML += `
+      <tr>
+        <td><input type="checkbox" class="chk" value="${docSnap.id}"></td>
+        <td>
+          <img src="${p.imagem || 'https://via.placeholder.com/50'}"
+               width="50" class="rounded">
+        </td>
+        <td>${p.descricao}</td>
+        <td>${p.marca || ""}</td>
+        <td>${p.grupo || ""}</td>
+        <td>${p.subgrupo || ""}</td>
+        <td>${p.setor || ""}</td>
+        <td>R$ ${p.custo?.toFixed(2) || "0.00"}</td>
+        <td>R$ ${p.venda?.toFixed(2) || "0.00"}</td>
+        <td>${p.markup || ""}</td>
+      </tr>
+    `;
+  });
+}
+
+// Criar
+window.abrirModal = () => {
+  modalTitulo.textContent = "Cadastrar Produto";
+  limparCampos();
+  setCampos(true);
+  modal.show();
+};
+
+// Salvar
+window.salvarProduto = async () => {
+  if (!descricao.value.trim()) {
+    alert("A descrição do produto é obrigatória.");
+    return;
+  }
+
+  if (!custo.value || !venda.value) {
+    alert("Atenção: preço de custo ou venda não informado.");
+  }
+
+  const dados = {
+    imagem: imagem.value,
+    descricao: descricao.value,
+    marca: marca.value,
+    grupo: grupo.value,
+    subgrupo: subgrupo.value,
+    setor: setor.value,
+    codigoProduto: codigoProduto.value,
+    codigoBarras: codigoBarras.value,
+    custo: Number(custo.value) || 0,
+    venda: Number(venda.value) || 0,
+    markup: markup.value
+  };
+
+  if (produtoId.value) {
+    await updateDoc(doc(db, "produtos", produtoId.value), dados);
+  } else {
+    await addDoc(collection(db, "produtos"), dados);
+  }
+
+  modal.hide();
+  carregarProdutos();
+};
+
+// Visualizar
+window.visualizarProduto = async () => {
+  const ids = getSelecionados();
+  if (ids.length !== 1) {
+    alert("Selecione apenas um produto para visualizar.");
+    return;
+  }
+
+  const snap = await getDoc(doc(db, "produtos", ids[0]));
+  const p = snap.data();
+
+  modalTitulo.textContent = "Visualizar Produto";
+  produtoId.value = ids[0];
+
+  imagem.value = p.imagem || "";
+  previewImagem.src = p.imagem || "https://via.placeholder.com/150";
+  descricao.value = p.descricao;
+  marca.value = p.marca || "";
+  grupo.value = p.grupo || "";
+  subgrupo.value = p.subgrupo || "";
+  setor.value = p.setor || "";
+  codigoProduto.value = p.codigoProduto || "";
+  codigoBarras.value = p.codigoBarras || "";
+  custo.value = p.custo || "";
+  venda.value = p.venda || "";
+  markup.value = p.markup || "";
+
+  setCampos(false);
+  modal.show();
+};
+
+// Editar
+window.editarSelecionado = async () => {
+  const ids = getSelecionados();
+  if (ids.length !== 1) {
+    alert("Selecione apenas um produto para editar.");
+    return;
+  }
+
+  const snap = await getDoc(doc(db, "produtos", ids[0]));
+  const p = snap.data();
+
+  modalTitulo.textContent = "Editar Produto";
+  produtoId.value = ids[0];
+
+  imagem.value = p.imagem || "";
+  previewImagem.src = p.imagem || "https://via.placeholder.com/150";
+  descricao.value = p.descricao;
+  marca.value = p.marca || "";
+  grupo.value = p.grupo || "";
+  subgrupo.value = p.subgrupo || "";
+  setor.value = p.setor || "";
+  codigoProduto.value = p.codigoProduto || "";
+  codigoBarras.value = p.codigoBarras || "";
+  custo.value = p.custo || "";
+  venda.value = p.venda || "";
+  markup.value = p.markup || "";
+
+  setCampos(true);
+  modal.show();
+};
+
+// Excluir
+window.excluirSelecionados = async () => {
+  const ids = getSelecionados();
+  if (!ids.length) {
+    alert("Selecione pelo menos um produto.");
+    return;
+  }
+
+  if (!confirm("Deseja excluir os produtos selecionados?")) return;
+
+  for (const id of ids) {
+    await deleteDoc(doc(db, "produtos", id));
+  }
+
+  carregarProdutos();
+};
+
+/* =======================
+   CHECK ALL
+======================= */
+document.getElementById("checkAll")?.addEventListener("change", e => {
+  document.querySelectorAll(".chk").forEach(c => c.checked = e.target.checked);
+});
+
+/* =======================
+   INIT
+======================= */
+carregarProdutos();
+</script>
+
+
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>
